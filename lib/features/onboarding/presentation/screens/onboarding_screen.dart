@@ -1,0 +1,123 @@
+import 'package:flutter/material.dart';
+import 'package:geez_ai/core/theme/colors.dart';
+import 'package:geez_ai/core/theme/spacing.dart';
+import 'package:geez_ai/features/onboarding/domain/onboarding_state.dart';
+import 'package:geez_ai/features/onboarding/presentation/screens/welcome_screen.dart';
+import 'package:geez_ai/features/onboarding/presentation/screens/quiz_screen.dart';
+import 'package:geez_ai/features/onboarding/presentation/screens/persona_reveal_screen.dart';
+
+class OnboardingScreen extends StatefulWidget {
+  const OnboardingScreen({super.key});
+
+  @override
+  State<OnboardingScreen> createState() => _OnboardingScreenState();
+}
+
+class _OnboardingScreenState extends State<OnboardingScreen> {
+  final PageController _pageController = PageController();
+  int _currentPage = 0;
+  OnboardingState _state = const OnboardingState();
+
+  void _goToPage(int page) {
+    _pageController.animateToPage(
+      page,
+      duration: const Duration(milliseconds: 400),
+      curve: Curves.easeInOutCubic,
+    );
+  }
+
+  void _nextPage() {
+    if (_currentPage < 2) {
+      _goToPage(_currentPage + 1);
+    }
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Scaffold(
+      backgroundColor:
+          isDark ? GeezColors.backgroundDark : GeezColors.background,
+      body: SafeArea(
+        child: Column(
+          children: [
+            // Page indicator
+            Padding(
+              padding: const EdgeInsets.only(top: GeezSpacing.md),
+              child: _PageIndicator(
+                currentPage: _currentPage,
+                pageCount: 3,
+              ),
+            ),
+
+            // Pages
+            Expanded(
+              child: PageView(
+                controller: _pageController,
+                physics: const NeverScrollableScrollPhysics(),
+                onPageChanged: (page) {
+                  setState(() => _currentPage = page);
+                },
+                children: [
+                  WelcomeScreen(
+                    onContinue: _nextPage,
+                  ),
+                  QuizScreen(
+                    state: _state,
+                    onStateChanged: (newState) {
+                      setState(() => _state = newState);
+                    },
+                    onContinue: _nextPage,
+                  ),
+                  PersonaRevealScreen(
+                    state: _state,
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _PageIndicator extends StatelessWidget {
+  const _PageIndicator({
+    required this.currentPage,
+    required this.pageCount,
+  });
+
+  final int currentPage;
+  final int pageCount;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: List.generate(pageCount, (index) {
+        final isActive = index == currentPage;
+        return AnimatedContainer(
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
+          width: isActive ? 28 : 8,
+          height: 8,
+          margin: const EdgeInsets.symmetric(horizontal: 4),
+          decoration: BoxDecoration(
+            color: isActive
+                ? GeezColors.primary
+                : GeezColors.primary.withValues(alpha: 0.2),
+            borderRadius: BorderRadius.circular(4),
+          ),
+        );
+      }),
+    );
+  }
+}
