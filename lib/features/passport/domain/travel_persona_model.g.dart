@@ -10,33 +10,33 @@ _TravelPersonaModel _$TravelPersonaModelFromJson(
   Map<String, dynamic> json,
 ) => _TravelPersonaModel(
   id: json['id'] as String,
-  userId: json['userId'] as String,
-  foodieLevel: (json['foodieLevel'] as num?)?.toInt() ?? 1,
-  historyBuffLevel: (json['historyBuffLevel'] as num?)?.toInt() ?? 1,
-  natureLoverLevel: (json['natureLoverLevel'] as num?)?.toInt() ?? 1,
-  adventureSeekerLevel: (json['adventureSeekerLevel'] as num?)?.toInt() ?? 1,
-  cultureExplorerLevel: (json['cultureExplorerLevel'] as num?)?.toInt() ?? 1,
-  discoveryScore: (json['discoveryScore'] as num?)?.toInt() ?? 0,
-  explorerTier: json['explorerTier'] as String? ?? 'tourist',
-  createdAt: json['createdAt'] == null
+  userId: json['user_id'] as String,
+  foodieLevel: (json['foodie_level'] as num?)?.toInt() ?? 1,
+  historyBuffLevel: (json['history_buff_level'] as num?)?.toInt() ?? 1,
+  natureLoverLevel: (json['nature_lover_level'] as num?)?.toInt() ?? 1,
+  adventureSeekerLevel: (json['adventure_seeker_level'] as num?)?.toInt() ?? 1,
+  cultureExplorerLevel: (json['culture_explorer_level'] as num?)?.toInt() ?? 1,
+  discoveryScore: (json['discovery_score'] as num?)?.toInt() ?? 0,
+  explorerTier: json['explorer_tier'] as String? ?? 'tourist',
+  createdAt: json['created_at'] == null
       ? null
-      : DateTime.parse(json['createdAt'] as String),
-  updatedAt: json['updatedAt'] == null
+      : DateTime.parse(json['created_at'] as String),
+  updatedAt: json['updated_at'] == null
       ? null
-      : DateTime.parse(json['updatedAt'] as String),
+      : DateTime.parse(json['updated_at'] as String),
 );
 
 Map<String, dynamic> _$TravelPersonaModelToJson(_TravelPersonaModel instance) =>
     <String, dynamic>{
       'id': instance.id,
-      'userId': instance.userId,
-      'foodieLevel': instance.foodieLevel,
-      'historyBuffLevel': instance.historyBuffLevel,
-      'natureLoverLevel': instance.natureLoverLevel,
-      'adventureSeekerLevel': instance.adventureSeekerLevel,
-      'cultureExplorerLevel': instance.cultureExplorerLevel,
-      'discoveryScore': instance.discoveryScore,
-      'explorerTier': instance.explorerTier,
-      'createdAt': instance.createdAt?.toIso8601String(),
-      'updatedAt': instance.updatedAt?.toIso8601String(),
+      'user_id': instance.userId,
+      'foodie_level': instance.foodieLevel,
+      'history_buff_level': instance.historyBuffLevel,
+      'nature_lover_level': instance.natureLoverLevel,
+      'adventure_seeker_level': instance.adventureSeekerLevel,
+      'culture_explorer_level': instance.cultureExplorerLevel,
+      'discovery_score': instance.discoveryScore,
+      'explorer_tier': instance.explorerTier,
+      'created_at': instance.createdAt?.toIso8601String(),
+      'updated_at': instance.updatedAt?.toIso8601String(),
     };

@@ -9,19 +9,19 @@ part of 'user_model.dart';
 _UserModel _$UserModelFromJson(Map<String, dynamic> json) => _UserModel(
   id: json['id'] as String,
   email: json['email'] as String,
-  displayName: json['displayName'] as String?,
-  avatarUrl: json['avatarUrl'] as String?,
+  displayName: json['display_name'] as String?,
+  avatarUrl: json['avatar_url'] as String?,
   language: json['language'] as String? ?? 'tr',
-  subscriptionTier: json['subscriptionTier'] as String? ?? 'free',
-  subscriptionExpiresAt: json['subscriptionExpiresAt'] == null
+  subscriptionTier: json['subscription_tier'] as String? ?? 'free',
+  subscriptionExpiresAt: json['subscription_expires_at'] == null
       ? null
-      : DateTime.parse(json['subscriptionExpiresAt'] as String),
-  createdAt: json['createdAt'] == null
+      : DateTime.parse(json['subscription_expires_at'] as String),
+  createdAt: json['created_at'] == null
       ? null
-      : DateTime.parse(json['createdAt'] as String),
-  updatedAt: json['updatedAt'] == null
+      : DateTime.parse(json['created_at'] as String),
+  updatedAt: json['updated_at'] == null
       ? null
-      : DateTime.parse(json['updatedAt'] as String),
+      : DateTime.parse(json['updated_at'] as String),
 );
 
 Map<String, dynamic> _$UserModelToJson(
@@ -29,11 +29,11 @@ Map<String, dynamic> _$UserModelToJson(
 ) => <String, dynamic>{
   'id': instance.id,
   'email': instance.email,
-  'displayName': instance.displayName,
-  'avatarUrl': instance.avatarUrl,
+  'display_name': instance.displayName,
+  'avatar_url': instance.avatarUrl,
   'language': instance.language,
-  'subscriptionTier': instance.subscriptionTier,
-  'subscriptionExpiresAt': instance.subscriptionExpiresAt?.toIso8601String(),
-  'createdAt': instance.createdAt?.toIso8601String(),
-  'updatedAt': instance.updatedAt?.toIso8601String(),
+  'subscription_tier': instance.subscriptionTier,
+  'subscription_expires_at': instance.subscriptionExpiresAt?.toIso8601String(),
+  'created_at': instance.createdAt?.toIso8601String(),
+  'updated_at': instance.updatedAt?.toIso8601String(),
 };

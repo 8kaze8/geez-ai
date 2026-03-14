@@ -9,27 +9,27 @@ part of 'passport_stamp_model.dart';
 _PassportStampModel _$PassportStampModelFromJson(Map<String, dynamic> json) =>
     _PassportStampModel(
       id: json['id'] as String,
-      userId: json['userId'] as String,
-      routeId: json['routeId'] as String?,
+      userId: json['user_id'] as String,
+      routeId: json['route_id'] as String?,
       city: json['city'] as String,
       country: json['country'] as String,
-      countryCode: json['countryCode'] as String?,
-      stampDate: json['stampDate'] as String,
-      stampImageUrl: json['stampImageUrl'] as String?,
-      createdAt: json['createdAt'] == null
+      countryCode: json['country_code'] as String?,
+      stampDate: json['stamp_date'] as String,
+      stampImageUrl: json['stamp_image_url'] as String?,
+      createdAt: json['created_at'] == null
           ? null
-          : DateTime.parse(json['createdAt'] as String),
+          : DateTime.parse(json['created_at'] as String),
     );
 
 Map<String, dynamic> _$PassportStampModelToJson(_PassportStampModel instance) =>
     <String, dynamic>{
       'id': instance.id,
-      'userId': instance.userId,
-      'routeId': instance.routeId,
+      'user_id': instance.userId,
+      'route_id': instance.routeId,
       'city': instance.city,
       'country': instance.country,
-      'countryCode': instance.countryCode,
-      'stampDate': instance.stampDate,
-      'stampImageUrl': instance.stampImageUrl,
-      'createdAt': instance.createdAt?.toIso8601String(),
+      'country_code': instance.countryCode,
+      'stamp_date': instance.stampDate,
+      'stamp_image_url': instance.stampImageUrl,
+      'created_at': instance.createdAt?.toIso8601String(),
     };

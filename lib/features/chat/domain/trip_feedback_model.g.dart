@@ -9,37 +9,37 @@ part of 'trip_feedback_model.dart';
 _TripFeedbackModel _$TripFeedbackModelFromJson(Map<String, dynamic> json) =>
     _TripFeedbackModel(
       id: json['id'] as String,
-      userId: json['userId'] as String,
-      routeId: json['routeId'] as String,
-      overallRating: (json['overallRating'] as num?)?.toInt(),
-      foodRating: json['foodRating'] as String?,
-      paceFeedback: json['paceFeedback'] as String?,
+      userId: json['user_id'] as String,
+      routeId: json['route_id'] as String,
+      overallRating: (json['overall_rating'] as num?)?.toInt(),
+      foodRating: json['food_rating'] as String?,
+      paceFeedback: json['pace_feedback'] as String?,
       favoriteStops:
-          (json['favoriteStops'] as List<dynamic>?)
+          (json['favorite_stops'] as List<dynamic>?)
               ?.map((e) => e as String)
               .toList() ??
           const <String>[],
       dislikedStops:
-          (json['dislikedStops'] as List<dynamic>?)
+          (json['disliked_stops'] as List<dynamic>?)
               ?.map((e) => e as String)
               .toList() ??
           const <String>[],
-      freeText: json['freeText'] as String?,
-      createdAt: json['createdAt'] == null
+      freeText: json['free_text'] as String?,
+      createdAt: json['created_at'] == null
           ? null
-          : DateTime.parse(json['createdAt'] as String),
+          : DateTime.parse(json['created_at'] as String),
     );
 
 Map<String, dynamic> _$TripFeedbackModelToJson(_TripFeedbackModel instance) =>
     <String, dynamic>{
       'id': instance.id,
-      'userId': instance.userId,
-      'routeId': instance.routeId,
-      'overallRating': instance.overallRating,
-      'foodRating': instance.foodRating,
-      'paceFeedback': instance.paceFeedback,
-      'favoriteStops': instance.favoriteStops,
-      'dislikedStops': instance.dislikedStops,
-      'freeText': instance.freeText,
-      'createdAt': instance.createdAt?.toIso8601String(),
+      'user_id': instance.userId,
+      'route_id': instance.routeId,
+      'overall_rating': instance.overallRating,
+      'food_rating': instance.foodRating,
+      'pace_feedback': instance.paceFeedback,
+      'favorite_stops': instance.favoriteStops,
+      'disliked_stops': instance.dislikedStops,
+      'free_text': instance.freeText,
+      'created_at': instance.createdAt?.toIso8601String(),
     };
