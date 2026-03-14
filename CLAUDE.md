@@ -59,3 +59,26 @@ All planning documents are in `docs/` folder:
 - Route Agent: distance matrix + TSP → optimal ordering + timing
 - Content Agent: fun facts, insider tips, cultural context → rich stop cards
 - Orchestrator: coordinates all agents for route generation
+
+## Development Team (Subagents)
+
+I (main Claude instance) act as **Project Manager** — I delegate tasks to specialized team members:
+
+| Role | Agent | Model | When to Use |
+|------|-------|-------|-------------|
+| Tech Lead | tech-lead | opus | BEFORE features (plan) + AFTER (review) |
+| Flutter Dev | mobile-developer | sonnet | Frontend screens, widgets, Riverpod |
+| Backend Dev | backend-architect | sonnet | Edge Functions, Auth, Supabase client |
+| AI Engineer | ai-engineer | opus | Claude API, agent system, embeddings |
+| UI Designer | ui-designer | sonnet | Visual design, animations, dark mode |
+| DB Architect | database-architect | sonnet | Schema, migrations, RLS, pgvector |
+| QA Engineer | qa-engineer | sonnet | Tests, security audit, code review |
+| Debugger | debugger | sonnet | Error diagnosis, bug fixes |
+
+### Orchestration Rules
+
+- **Plan first:** Tech Lead reviews architecture BEFORE implementation starts
+- **Parallel when independent:** Flutter Dev + Backend Dev can work simultaneously on separate concerns
+- **Sequential when dependent:** DB schema → Backend API → Frontend integration
+- **QA after every feature:** QA Engineer reviews AFTER implementation, BEFORE merge
+- **Debugger on demand:** Only when errors occur, not preventively
