@@ -47,8 +47,10 @@ final routerProvider = Provider<GoRouter>((ref) {
         return currentPath == RoutePaths.splash ? null : RoutePaths.splash;
       }
 
-      // Not authenticated -- redirect to login (unless already on a public route).
+      // Not authenticated -- redirect to login.
+      // Allow staying on login/signup, but redirect away from splash.
       if (!isAuthenticated) {
+        if (currentPath == RoutePaths.splash) return RoutePaths.login;
         return isPublicRoute ? null : RoutePaths.login;
       }
 
