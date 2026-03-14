@@ -164,7 +164,7 @@ class _ProfileErrorState extends StatelessWidget {
             ),
             const SizedBox(height: GeezSpacing.md),
             Text(
-              'Profil yuklenemedi',
+              'Profil yüklenemedi',
               style: GeezTypography.h3.copyWith(color: textColor),
               textAlign: TextAlign.center,
             ),
@@ -242,7 +242,7 @@ class _ProfileContent extends ConsumerWidget {
           const SizedBox(height: GeezSpacing.lg),
 
           // Trip History
-          _buildSectionTitle('Gecmis Geziler', isDark),
+          _buildSectionTitle('Geçmiş Geziler', isDark),
           const SizedBox(height: GeezSpacing.md),
           _buildTripHistory(isDark, textColor),
           const SizedBox(height: GeezSpacing.lg),
@@ -519,14 +519,14 @@ class _ProfileContent extends ConsumerWidget {
 
   Widget _buildSettings(BuildContext context, WidgetRef ref, bool isDark, Color textColor) {
     final settingsItems = [
-      _SettingItem(icon: Icons.language, title: 'Dil', trailing: 'Turkce'),
+      _SettingItem(icon: Icons.language, title: 'Dil', trailing: 'Türkçe'),
       _SettingItem(icon: Icons.palette, title: 'Tema', trailing: 'Light'),
       _SettingItem(icon: Icons.notifications_outlined, title: 'Bildirimler'),
       _SettingItem(icon: Icons.star, title: 'Premium', isPremium: true),
       _SettingItem(icon: Icons.person_outline, title: 'Hesap'),
       _SettingItem(
         icon: Icons.logout,
-        title: 'Cikis Yap',
+        title: 'Çıkış Yap',
         isDestructive: true,
       ),
     ];
@@ -651,7 +651,7 @@ class _ProfileContent extends ConsumerWidget {
           ),
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(true),
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            style: TextButton.styleFrom(foregroundColor: GeezColors.error),
             child: const Text('Çıkış Yap'),
           ),
         ],

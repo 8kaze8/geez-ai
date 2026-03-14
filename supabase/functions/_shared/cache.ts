@@ -162,9 +162,6 @@ export async function setCachedRoute(
           route_data: routeData,
           ai_model_used: routeData.aiModelUsed,
           expires_at: expiresAt,
-          // Reset hit_count to 0 for a fresh entry; the DB default also
-          // handles the insert path but explicit is safer on upsert.
-          hit_count: 0,
           last_hit_at: null,
         },
         {

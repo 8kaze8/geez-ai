@@ -84,7 +84,7 @@ class AuthStateNotifier extends StateNotifier<AuthState> {
         state = AuthState.authenticated(user);
       } else {
         state = const AuthState.unauthenticated(
-          errorMessage: 'Giris basarisiz. Lutfen tekrar deneyin.',
+          errorMessage: 'Giriş başarısız. Lütfen tekrar deneyin.',
         );
       }
     } on supa.AuthException catch (e) {

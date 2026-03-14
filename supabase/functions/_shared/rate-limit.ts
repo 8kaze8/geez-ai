@@ -224,21 +224,6 @@ export async function incrementUsage(
   }
 }
 
-/**
- * Alias for incrementUsage that delegates to the same RPC + fallback logic.
- *
- * Kept for backward compatibility. Prefer incrementUsage() directly.
- *
- * @param client - Service-role Supabase client.
- * @param userId - Authenticated user UUID.
- */
-export async function incrementUsageSafe(
-  client: SupabaseClient,
-  userId: string
-): Promise<void> {
-  await incrementUsage(client, userId, "generate_route");
-}
-
 // ---------------------------------------------------------------------------
 // 429 response helper
 // ---------------------------------------------------------------------------

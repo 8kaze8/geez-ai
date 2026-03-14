@@ -145,7 +145,7 @@ class FeedbackFormNotifier extends StateNotifier<FeedbackFormState> {
     final authState = _ref.read(authStateProvider);
     if (!authState.isAuthenticated || authState.user == null) {
       state = state.copyWith(
-        error: () => 'Geri bildirim gondermek icin giris yapmaniz gerekiyor.',
+        error: () => 'Geri bildirim göndermek için giriş yapmanız gerekiyor.',
       );
       return;
     }
@@ -190,7 +190,7 @@ class FeedbackFormNotifier extends StateNotifier<FeedbackFormState> {
       state = state.copyWith(
         isSubmitting: false,
         error: () =>
-            'Geri bildirim gonderilemedi. Lutfen tekrar deneyin.',
+            'Geri bildirim gönderilemedi. Lütfen tekrar deneyin.',
       );
     }
   }

@@ -121,7 +121,7 @@ class _BannerContent extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'E-posta adresinizi dogrulayin',
+                  'E-posta adresinizi doğrulayın',
                   style: GeezTypography.bodySmall.copyWith(
                     color: textColor,
                     fontWeight: FontWeight.w600,
@@ -130,14 +130,14 @@ class _BannerContent extends ConsumerWidget {
                 const SizedBox(height: 2),
                 Text(
                   resend.sent
-                      ? 'Dogrulama e-postasi gonderildi. Lutfen gelen kutunuzu kontrol edin.'
-                      : 'Hesabinizi etkinlestirmek icin e-postanizi dogrulayin.',
+                      ? 'Doğrulama e-postası gönderildi. Lütfen gelen kutunuzu kontrol edin.'
+                      : 'Hesabınızı etkinleştirmek için e-postanızı doğrulayın.',
                   style: GeezTypography.caption.copyWith(color: mutedColor),
                 ),
                 if (resend.error != null) ...[
                   const SizedBox(height: 2),
                   Text(
-                    'Gonderilemedi. Lutfen tekrar deneyin.',
+                    'Gönderilemedi. Lütfen tekrar deneyin.',
                     style: GeezTypography.caption.copyWith(
                       color: GeezColors.error,
                     ),
@@ -159,7 +159,7 @@ class _BannerContent extends ConsumerWidget {
                             ),
                           )
                         : Text(
-                            'Tekrar Gonder',
+                            'Tekrar Gönder',
                             style: GeezTypography.caption.copyWith(
                               color: resendColor,
                               fontWeight: FontWeight.w600,

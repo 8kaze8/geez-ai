@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:geez_ai/core/router/route_names.dart';
 import 'package:geez_ai/core/theme/colors.dart';
 
 class BottomNavBar extends StatelessWidget {
@@ -34,13 +35,13 @@ class BottomNavBar extends StatelessWidget {
             children: [
               _NavItem(
                 icon: Icons.home_rounded,
-                label: 'Home',
+                label: 'Ana Sayfa',
                 isSelected: currentIndex == 0,
                 onTap: () => _onTap(context, 0),
               ),
               _NavItem(
                 icon: Icons.explore_rounded,
-                label: 'Explore',
+                label: 'Keşfet',
                 isSelected: currentIndex == 1,
                 onTap: () => _onTap(context, 1),
               ),
@@ -50,13 +51,13 @@ class BottomNavBar extends StatelessWidget {
               ),
               _NavItem(
                 icon: Icons.book_rounded,
-                label: 'Passport',
+                label: 'Pasaport',
                 isSelected: currentIndex == 3,
                 onTap: () => _onTap(context, 3),
               ),
               _NavItem(
                 icon: Icons.person_rounded,
-                label: 'Profile',
+                label: 'Profil',
                 isSelected: currentIndex == 4,
                 onTap: () => _onTap(context, 4),
               ),
@@ -70,15 +71,15 @@ class BottomNavBar extends StatelessWidget {
   void _onTap(BuildContext context, int index) {
     switch (index) {
       case 0:
-        context.go('/');
+        context.go(RoutePaths.home);
       case 1:
-        context.go('/explore');
+        context.go(RoutePaths.explore);
       case 2:
-        context.go('/new-route');
+        context.go(RoutePaths.newRoute);
       case 3:
-        context.go('/passport');
+        context.go(RoutePaths.passport);
       case 4:
-        context.go('/profile');
+        context.go(RoutePaths.profile);
     }
   }
 }

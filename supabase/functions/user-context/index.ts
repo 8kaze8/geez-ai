@@ -34,7 +34,6 @@ import {
   createServiceClient,
   createUserClient,
 } from "../_shared/supabase-client.ts";
-import { checkRateLimit, rateLimitResponse } from "../_shared/rate-limit.ts";
 import { fetchUserContext } from "../_shared/user-context.ts";
 
 // ---------------------------------------------------------------------------
@@ -70,21 +69,7 @@ Deno.serve(
     const { userId } = await verifyAuth(req, userClient);
 
     // -----------------------------------------------------------------------
-    // 4. Rate limit check
-    // -----------------------------------------------------------------------
-    // User context lookups are lightweight but still rate-limited to prevent
-    // abuse. Uses the shared rate-limit infrastructure with a distinct action.
-    const rateLimit = await checkRateLimit(
-      serviceClient,
-      userId,
-      "user_context"
-    );
-    if (!rateLimit.allowed) {
-      return rateLimitResponse(rateLimit.remaining, rateLimit.limit, origin);
-    }
-
-    // -----------------------------------------------------------------------
-    // 5. Fetch and assemble UserContext
+    // 4. Fetch and assemble UserContext
     // -----------------------------------------------------------------------
     console.info(
       `[user-context] Fetching context for user=${userId}`
@@ -103,7 +88,7 @@ Deno.serve(
     );
 
     // -----------------------------------------------------------------------
-    // 6. Return response
+    // 5. Return response
     // -----------------------------------------------------------------------
     return new Response(JSON.stringify(userContext), {
       status: 200,

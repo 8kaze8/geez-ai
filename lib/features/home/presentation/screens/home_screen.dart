@@ -176,12 +176,12 @@ class _HomeErrorState extends StatelessWidget {
             const Text('\u{1F4F5}', style: TextStyle(fontSize: 48)),
             const SizedBox(height: GeezSpacing.md),
             Text(
-              'Bir sorun olustu',
+              'Bir sorun oluştu',
               style: GeezTypography.h3.copyWith(color: textColor),
             ),
             const SizedBox(height: GeezSpacing.sm),
             Text(
-              'Veriler yuklenemedi. Lutfen tekrar dene.',
+              'Veriler yüklenemedi. Lütfen tekrar dene.',
               style: GeezTypography.bodySmall.copyWith(color: mutedColor),
               textAlign: TextAlign.center,
             ),
@@ -294,7 +294,7 @@ class _HomeContent extends StatelessWidget {
           ),
         ],
 
-        // --- Section: Sana Ozel ---
+        // --- Section: Sana Özel ---
         SliverToBoxAdapter(
           child: Padding(
             padding: const EdgeInsets.fromLTRB(
@@ -304,10 +304,10 @@ class _HomeContent extends StatelessWidget {
               GeezSpacing.sm,
             ),
             child: _SectionHeader(
-              title: 'Sana Ozel',
+              title: 'Sana Özel',
               textColor: textColor,
               trailing: Text(
-                'Tumu',
+                'Tümü',
                 style: GeezTypography.bodySmall.copyWith(
                   color: GeezColors.primary,
                   fontWeight: FontWeight.w600,
@@ -452,7 +452,7 @@ class _Header extends StatelessWidget {
                 style: GeezTypography.h3.copyWith(color: textColor),
               ),
               Text(
-                'Bugun nereyi kesfedeceksin?',
+                'Bugün nereyi keşfedeceksin?',
                 style: GeezTypography.caption.copyWith(color: mutedColor),
               ),
             ],
@@ -623,17 +623,17 @@ class _WelcomeBanner extends StatelessWidget {
           const Text('\u{1F30D}', style: TextStyle(fontSize: 36)),
           const SizedBox(height: GeezSpacing.sm),
           Text(
-            'Ilk rotani olustur!',
+            'İlk rotanı oluştur!',
             style: GeezTypography.h3.copyWith(color: textColor),
           ),
           const SizedBox(height: GeezSpacing.xs),
           Text(
-            'Birka\u{00E7} soruya cevap ver, yapay zeka sana ozel bir rota hazirlasin.',
+            'Birkaç soruya cevap ver, yapay zeka sana özel bir rota hazırlasın.',
             style: GeezTypography.bodySmall.copyWith(color: mutedColor),
           ),
           const SizedBox(height: GeezSpacing.md),
           GeezButton(
-            label: 'Rota Olustur',
+            label: 'Rota Oluştur',
             onTap: () => context.go(RoutePaths.newRoute),
             icon: Icons.add_rounded,
           ),
@@ -677,7 +677,7 @@ class _NoActiveRouteCard extends StatelessWidget {
           const SizedBox(width: GeezSpacing.sm + 4),
           Expanded(
             child: Text(
-              'Aktif bir rotaniz yok. Yeni bir tane baslatmak ister misiniz?',
+              'Aktif bir rotanız yok. Yeni bir tane başlatmak ister misiniz?',
               style: GeezTypography.bodySmall.copyWith(color: mutedColor),
             ),
           ),
@@ -770,7 +770,7 @@ class _RecentRouteTile extends StatelessWidget {
               borderRadius: BorderRadius.circular(GeezRadius.chip),
             ),
             child: Text(
-              'Tamamlandi',
+              'Tamamlandı',
               style: GeezTypography.caption.copyWith(
                 color: GeezColors.accent,
                 fontWeight: FontWeight.w600,

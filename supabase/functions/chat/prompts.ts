@@ -198,12 +198,54 @@ Reply in JSON: { "message": "...", "understood": false }`;
  * ready for the generate-route function.
  *
  * @param messages - Full conversation history.
+ * @param language - BCP-47 language code (default "tr").
  * @returns The extraction instruction string.
  */
-export function buildExtractionPrompt(messages: ChatMessage[]): string {
+export function buildExtractionPrompt(
+  messages: ChatMessage[],
+  language = "tr"
+): string {
   const conversationText = messages
     .map((m) => `${m.role}: ${m.content}`)
     .join("\n");
+
+  if (language === "en") {
+    return `Extract route generation parameters from the conversation below.
+
+Conversation:
+${conversationText}
+
+Return the parameters in the following JSON format:
+{
+  "city": "City name (e.g. Istanbul, Paris, Tokyo)",
+  "country": "Country name or ISO code (e.g. Turkey, France, JP)",
+  "travelStyle": "historical | food | adventure | nature | mixed",
+  "transportMode": "walking | public | car | mixed",
+  "budgetLevel": "budget | mid | premium",
+  "durationDays": a number between 1 and 7
+}
+
+Rules:
+- travelStyle values: historical, food, adventure, nature, mixed
+  - "History", "Culture", "Historical" -> "historical"
+  - "Food", "Food & Drink", "Eating" -> "food"
+  - "Adventure" -> "adventure"
+  - "Nature", "Outdoors" -> "nature"
+  - "Mixed", "Surprise", "All" -> "mixed"
+- transportMode values: walking, public, car, mixed
+  - "Walking", "On foot" -> "walking"
+  - "Public transit", "Metro", "Bus", "Public" -> "public"
+  - "Car", "Drive" -> "car"
+  - "Mixed", "Taxi", "Uber" -> "mixed"
+- budgetLevel values: budget, mid, premium
+  - "Budget", "Cheap", "Economy" -> "budget"
+  - "Mid-range", "Mid", "Moderate" -> "mid"
+  - "Premium", "Luxury", "No limit" -> "premium"
+- durationDays: extract numeric value. "1 Day" -> 1, "One week" -> 7
+- country: infer from the city when not stated (Istanbul -> Turkey, Paris -> France)
+
+Return JSON only, no other text.`;
+  }
 
   return `Asagidaki sohbetten rota olusturma parametrelerini cikar.
 

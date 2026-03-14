@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' hide AuthState;
+import 'package:geez_ai/core/router/route_names.dart';
 import 'package:geez_ai/core/theme/colors.dart';
 import 'package:geez_ai/core/theme/typography.dart';
 import 'package:geez_ai/core/theme/spacing.dart';
@@ -39,6 +41,35 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         );
   }
 
+  Future<void> _handleForgotPassword() async {
+    final email = _emailController.text.trim();
+    if (!mounted) return;
+
+    if (email.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Lütfen e-posta adresinizi girin'),
+        ),
+      );
+      return;
+    }
+
+    try {
+      await Supabase.instance.client.auth.resetPasswordForEmail(email);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Şifre sıfırlama e-postası gönderildi'),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.toString())),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -47,7 +78,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     // Navigate on successful auth
     ref.listen<AuthState>(authStateProvider, (prev, next) {
       if (next.isAuthenticated) {
-        context.go('/');
+        context.go(RoutePaths.home);
       }
     });
 
@@ -77,7 +108,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         ),
                         const SizedBox(height: GeezSpacing.md),
                         Text(
-                          'Tekrar Hosgeldin',
+                          'Tekrar Hoşgeldin',
                           style: GeezTypography.h1.copyWith(
                             color: isDark
                                 ? GeezColors.textPrimaryDark
@@ -86,7 +117,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         ),
                         const SizedBox(height: GeezSpacing.sm),
                         Text(
-                          'Hesabina giris yap ve kesfe devam et',
+                          'Hesabına giriş yap ve keşfe devam et',
                           style: GeezTypography.body.copyWith(
                             color: GeezColors.textSecondary,
                           ),
@@ -146,12 +177,30 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   // Password
                   AuthTextField(
                     controller: _passwordController,
-                    label: 'Sifre',
-                    hint: 'Sifreni gir',
+                    label: 'Şifre',
+                    hint: 'Şifreni gir',
                     isPassword: true,
                     prefixIcon: Icons.lock_outlined,
                     textInputAction: TextInputAction.done,
                     onSubmitted: (_) => _handleLogin(),
+                  ),
+
+                  // Forgot password link
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: TextButton(
+                      onPressed: _handleForgotPassword,
+                      style: TextButton.styleFrom(
+                        padding: EdgeInsets.zero,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
+                      child: Text(
+                        'Şifremi Unuttum?',
+                        style: GeezTypography.caption.copyWith(
+                          color: GeezColors.primary,
+                        ),
+                      ),
+                    ),
                   ),
 
                   const SizedBox(height: GeezSpacing.lg),
@@ -160,7 +209,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   SizedBox(
                     width: double.infinity,
                     child: GeezButton(
-                      label: 'Giris Yap',
+                      label: 'Giriş Yap',
                       onTap: _handleLogin,
                       isLoading: authState.isLoading,
                       icon: Icons.login_rounded,
@@ -207,15 +256,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
-                          'Hesabin yok mu? ',
+                          'Hesabın yok mu? ',
                           style: GeezTypography.body.copyWith(
                             color: GeezColors.textSecondary,
                           ),
                         ),
                         GestureDetector(
-                          onTap: () => context.go('/signup'),
+                          onTap: () => context.go(RoutePaths.signup),
                           child: Text(
-                            'Kayit Ol',
+                            'Kayıt Ol',
                             style: GeezTypography.body.copyWith(
                               color: GeezColors.primary,
                               fontWeight: FontWeight.w600,

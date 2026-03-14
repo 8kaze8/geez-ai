@@ -32,13 +32,13 @@ class ExploreScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: GeezSpacing.lg),
                 Text(
-                  'Kesfet',
+                  'Keşfet',
                   style: GeezTypography.h1.copyWith(color: textColor),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: GeezSpacing.sm),
                 Text(
-                  'Kisilestirilmis oneriler yakinda burada!',
+                  'Kişiselleştirilmiş öneriler yakında burada!',
                   style: GeezTypography.body.copyWith(color: mutedColor),
                   textAlign: TextAlign.center,
                 ),

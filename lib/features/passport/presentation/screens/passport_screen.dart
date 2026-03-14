@@ -109,20 +109,20 @@ class _PassportContent extends ConsumerWidget {
             const SizedBox(height: GeezSpacing.lg),
 
             // Stamps Section
-            _buildSectionTitle('Damgalarim', isDark),
+            _buildSectionTitle('Damgalarım', isDark),
             const SizedBox(height: GeezSpacing.md),
             _buildStampGrid(),
             const SizedBox(height: GeezSpacing.lg),
 
             // Statistics Section
-            _buildSectionTitle('Istatistikler', isDark),
+            _buildSectionTitle('İstatistikler', isDark),
             const SizedBox(height: GeezSpacing.md),
             _buildStatsCard(isDark),
             const SizedBox(height: GeezSpacing.lg),
 
             // Persona Bars Section
             if (state.personaLevels.isNotEmpty) ...[
-              _buildSectionTitle('Seyahat Tarzin', isDark),
+              _buildSectionTitle('Seyahat Tarzım', isDark),
               const SizedBox(height: GeezSpacing.md),
               _buildPersonaBars(isDark),
               const SizedBox(height: GeezSpacing.lg),
@@ -136,7 +136,7 @@ class _PassportContent extends ConsumerWidget {
 
             // Share Button
             GeezButton(
-              label: 'Pasaportumu Paylas',
+              label: 'Pasaportumu Paylaş',
               onTap: () => ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text('Yakinda!')),
               ),
@@ -533,13 +533,13 @@ class _PassportError extends StatelessWidget {
             ),
             const SizedBox(height: GeezSpacing.md),
             Text(
-              'Bir hata olustu',
+              'Bir hata oluştu',
               style: GeezTypography.h3.copyWith(color: textColor),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: GeezSpacing.sm),
             Text(
-              'Pasaport verisi yuklenemedi. Lutfen tekrar deneyin.',
+              'Pasaport verisi yüklenemedi. Lütfen tekrar deneyin.',
               style: GeezTypography.bodySmall.copyWith(
                 color: GeezColors.textSecondary,
               ),
@@ -585,13 +585,13 @@ class _PassportEmpty extends StatelessWidget {
             ),
             const SizedBox(height: GeezSpacing.lg),
             Text(
-              'Pasaportunuz Bos',
+              'Pasaportunuz Boş',
               style: GeezTypography.h2.copyWith(color: textColor),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: GeezSpacing.sm),
             Text(
-              'Henuz bir gezi yapmadiniz!\nIlk rotanizi olusturun ve damganizi kazanin.',
+              'Henüz bir gezi yapmadınız!\nİlk rotanızı oluşturun ve damganızı kazanın.',
               style: GeezTypography.bodySmall.copyWith(
                 color: GeezColors.textSecondary,
               ),
@@ -599,7 +599,7 @@ class _PassportEmpty extends StatelessWidget {
             ),
             const SizedBox(height: GeezSpacing.xl),
             GeezButton(
-              label: 'Ilk Rotami Olustur',
+              label: 'İlk Rotamı Oluştur',
               onTap: onCreateRoute,
               icon: Icons.explore,
               width: double.infinity,

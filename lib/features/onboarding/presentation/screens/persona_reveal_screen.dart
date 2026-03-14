@@ -138,7 +138,7 @@ class _PersonaRevealScreenState extends ConsumerState<PersonaRevealScreen>
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            submitState.errorMessage ?? 'Bir hata olustu. Lutfen tekrar dene.',
+            submitState.errorMessage ?? 'Bir hata oluştu. Lütfen tekrar dene.',
           ),
           backgroundColor: GeezColors.error,
         ),
@@ -387,7 +387,7 @@ class _PersonaRevealScreenState extends ConsumerState<PersonaRevealScreen>
     if (submit.isLoading) return 'Kaydediliyor...';
     final isAuthenticated = ref.read(authStateProvider).isAuthenticated;
     if (!isAuthenticated && quiz.selectedStyles.isNotEmpty) {
-      return 'Hesap Olustur ve Baslayalim!';
+      return 'Hesap Oluştur ve Başlayalım!';
     }
     return 'İlk Rotamı Planla!';
   }

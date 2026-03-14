@@ -24,13 +24,8 @@
 
 import { withErrorHandler, AppError } from "../_shared/error-handler.ts";
 import { handleCors, corsHeaders } from "../_shared/cors.ts";
-import { createUserClient, createServiceClient } from "../_shared/supabase-client.ts";
+import { createUserClient } from "../_shared/supabase-client.ts";
 import { verifyAuth } from "../_shared/auth.ts";
-import {
-  checkRateLimit,
-  incrementUsage,
-  rateLimitResponse,
-} from "../_shared/rate-limit.ts";
 import { routeToModel } from "../_shared/model-router.ts";
 import type { ChatMessage, RouteRequest } from "../_shared/types.ts";
 import type {
@@ -50,28 +45,13 @@ import {
 // ---------------------------------------------------------------------------
 
 /**
- * Daily chat message limit per user.
+ * Maximum number of messages allowed per request.
  *
- * The route generation monthly quota is tracked separately.  Chat messages
- * are cheap (GPT-4.1-nano) but we still cap them to prevent runaway costs
- * from a single user or a compromised token.
- *
- * Implementation: reuses the existing usage_tracking table and
- * checkRateLimit helper.  The "chat_message" action maps to the
- * routes_generated counter for now (same table, same counter) — this is
- * intentional while the product is pre-launch.  A dedicated counter column
- * can be added later without changing the API contract.
- *
- * Effective limit: 100 messages per calendar month (free tier = 3 routes
- * maps poorly to chat — override via CHAT_MONTHLY_LIMIT env var at deploy).
- * For now we apply a simple in-handler guard capped at 100 LLM calls per
- * request session using the messages array length, and rely on the shared
- * monthly rate limiter for the broader abuse-prevention story.
+ * Chat messages use GPT-4.1-nano and are cheap, but we guard against
+ * runaway session sizes. A single conversation collecting route params
+ * should never exceed this; it is a safety ceiling, not a quota.
  */
 const MAX_MESSAGES = 50;
-
-/** Monthly rate-limit action identifier for the chat endpoint. */
-const CHAT_RATE_LIMIT_ACTION = "chat_message";
 
 /** Maximum step index (inclusive). */
 const MAX_STEP = 4;
@@ -146,6 +126,13 @@ function validateChatRequest(body: unknown): ChatRequest {
       throw new AppError(
         "INVALID_MESSAGE_ROLE",
         `messages[${i}].role must be "user", "assistant", or "system".`,
+        400
+      );
+    }
+    if (msg.content.length > 2000) {
+      throw new AppError(
+        "MESSAGE_TOO_LONG",
+        `messages[${i}].content must not exceed 2000 characters.`,
         400
       );
     }
@@ -386,12 +373,14 @@ function determineNextStep(
  * Uses the qa_flow task type (GPT-4.1-nano) for cost efficiency.
  *
  * @param messages - Full conversation history.
+ * @param language - BCP-47 language code for extraction instructions.
  * @returns Extracted partial RouteRequest.
  */
 async function extractRouteParams(
-  messages: ChatMessage[]
+  messages: ChatMessage[],
+  language: string
 ): Promise<Partial<RouteRequest>> {
-  const extractionPrompt = buildExtractionPrompt(messages);
+  const extractionPrompt = buildExtractionPrompt(messages, language);
 
   const llmResponse = await routeToModel({
     taskType: "qa_flow",
@@ -401,6 +390,7 @@ async function extractRouteParams(
     jsonMode: true,
     temperature: 0.0, // deterministic extraction
     maxTokens: EXTRACTION_MAX_TOKENS,
+    timeoutMs: 30_000,
   });
 
   return parseExtractionResponse(llmResponse.content);
@@ -441,6 +431,7 @@ async function generateChatResponse(
     jsonMode: true,
     temperature: 0.8,
     maxTokens: STEP_MAX_TOKENS,
+    timeoutMs: 30_000,
   });
 
   const parsed = parseStepResponse(llmResponse.content);
@@ -453,7 +444,7 @@ async function generateChatResponse(
 
   if (isComplete) {
     try {
-      extractedParams = await extractRouteParams(messages);
+      extractedParams = await extractRouteParams(messages, language);
     } catch (err) {
       // If extraction fails, still return the message but flag as incomplete
       // so the Flutter client can retry or fall back.
@@ -498,25 +489,7 @@ Deno.serve(
 
     // --- Authentication ---
     const userClient = createUserClient(req);
-    const serviceClient = createServiceClient();
     const { userId } = await verifyAuth(req, userClient);
-
-    // --- Rate limit check ---
-    // Uses the shared monthly usage_tracking table.  The chat_message action
-    // is distinct from generate_route so that chat quota is tracked
-    // independently once a dedicated counter column is added to the schema.
-    // For now both actions use the same routes_generated counter — the
-    // hard cap is enforced so that a single user cannot exhaust server
-    // resources with chat-only traffic.
-    const rateLimit = await checkRateLimit(
-      serviceClient,
-      userId,
-      CHAT_RATE_LIMIT_ACTION
-    );
-    if (!rateLimit.allowed) {
-      const origin = req.headers.get("Origin") ?? undefined;
-      return rateLimitResponse(rateLimit.remaining, rateLimit.limit, origin);
-    }
 
     // --- Parse and validate body ---
     let body: unknown;
@@ -540,14 +513,6 @@ Deno.serve(
       messages,
       currentStep,
       language ?? "tr"
-    );
-
-    // Increment the usage counter after a successful AI call.
-    // Fire-and-forget so that a counter write failure does not fail the
-    // request — the same pattern used in generate-route.
-    incrementUsage(serviceClient, userId, CHAT_RATE_LIMIT_ACTION).catch(
-      (err: unknown) =>
-        console.warn("[chat] Usage increment failed (non-fatal):", err)
     );
 
     console.log(

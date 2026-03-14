@@ -159,16 +159,28 @@ export function validateRouteRequest(
     requireEnum(obj.language, VALID_LANGUAGES, "language");
   }
 
-  // -- preferences (optional, string array) --
+  // -- preferences (optional, string array, max 10 items, 200 chars each) --
   if (obj.preferences !== undefined && obj.preferences !== null) {
     if (!Array.isArray(obj.preferences)) {
       fieldError("preferences", '"preferences" must be an array of strings.');
+    }
+    if (obj.preferences.length > 10) {
+      fieldError(
+        "preferences",
+        '"preferences" must not contain more than 10 items.'
+      );
     }
     for (let i = 0; i < obj.preferences.length; i++) {
       if (typeof obj.preferences[i] !== "string") {
         fieldError(
           "preferences",
           `"preferences[${i}]" must be a string.`
+        );
+      }
+      if ((obj.preferences[i] as string).length > 200) {
+        fieldError(
+          "preferences",
+          `"preferences[${i}]" must not exceed 200 characters.`
         );
       }
     }

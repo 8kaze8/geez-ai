@@ -33,7 +33,7 @@ class _RouteDetailScreenState extends ConsumerState<RouteDetailScreen> {
         loading: () => _LoadingBody(isDark: isDark),
         error: (error, _) => _ErrorBody(
           isDark: isDark,
-          message: 'Rota yuklenemedi. Lutfen tekrar deneyin.',
+          message: 'Rota yüklenemedi. Lütfen tekrar deneyin.',
           onRetry: () =>
               ref.invalidate(routeDetailProvider(widget.routeId)),
         ),
@@ -714,10 +714,13 @@ class _CircleIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       padding: const EdgeInsets.all(6),
       decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.3),
+        color: isDark
+            ? Colors.white.withValues(alpha: 0.5)
+            : Colors.black.withValues(alpha: 0.3),
         shape: BoxShape.circle,
       ),
       child: Icon(icon, color: Colors.white, size: 20),

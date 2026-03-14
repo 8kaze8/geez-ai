@@ -44,6 +44,7 @@ import type {
   StopData,
   AiProvider,
   UserContext,
+  PlaceCategory,
 } from "../_shared/types.ts";
 import type { LLMResponse } from "../_shared/model-router.ts";
 import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2";
@@ -154,6 +155,7 @@ async function generateRouteWithAI(
     jsonMode: true,
     temperature: 0.7,
     maxTokens: 4000,
+    timeoutMs: 45_000,
   });
 
   // 3. Parse JSON response
@@ -248,39 +250,40 @@ const VALID_CATEGORIES = new Set([
  * Normalises an AI-generated category string to one of the allowed DB values.
  * Falls back to "other" if the category is unrecognised.
  */
-function normalizeCategory(raw: string): string {
+function normalizeCategory(raw: string): PlaceCategory {
   const lower = raw.toLowerCase().trim().replace(/\s+/g, "_");
-  if (VALID_CATEGORIES.has(lower)) return lower;
+  if (VALID_CATEGORIES.has(lower)) return lower as PlaceCategory;
 
   // Common AI-generated aliases
-  const aliases: Record<string, string> = {
+  // Note: "hidden gem" (with space) is unreachable here because whitespace is
+  // already normalised to underscores above — only "hidden_gem" can appear.
+  const aliases: Record<string, PlaceCategory> = {
     historic: "landmark",
     historical: "landmark",
     monument: "landmark",
-    "food_market": "market",
+    food_market: "market",
     bazaar: "market",
     garden: "park",
     nature: "park",
-    mosque: "religious",
-    church: "religious",
-    temple: "religious",
-    synagogue: "religious",
+    mosque: "other",
+    church: "other",
+    temple: "other",
+    synagogue: "other",
     bar: "entertainment",
     nightlife: "entertainment",
     theater: "entertainment",
     theatre: "entertainment",
-    "hidden gem": "hidden_gem",
     hiddengem: "hidden_gem",
-    "street_food": "restaurant",
+    street_food: "restaurant",
     food: "restaurant",
     mall: "shopping",
     store: "shopping",
-    beach: "beach",
     seaside: "beach",
     coastal: "beach",
     scenic: "viewpoint",
     panoramic: "viewpoint",
-    "observation_deck": "viewpoint",
+    observation_deck: "viewpoint",
+    view_point: "viewpoint",
   };
 
   return aliases[lower] ?? "other";

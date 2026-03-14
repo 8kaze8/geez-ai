@@ -197,7 +197,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
               child: FadeTransition(
                 opacity: _taglineFade,
                 child: Text(
-                  'Her gezi bir kesif',
+                  'Her gezi bir keşif',
                   style: GeezTypography.body.copyWith(
                     color: GeezColors.textSecondary,
                     fontStyle: FontStyle.italic,

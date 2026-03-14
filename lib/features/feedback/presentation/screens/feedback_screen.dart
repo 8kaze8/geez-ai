@@ -138,13 +138,13 @@ class _SuccessState extends StatelessWidget {
             ),
             const SizedBox(height: GeezSpacing.lg),
             Text(
-              'Tesekkurler!',
+              'Teşekkürler!',
               style: GeezTypography.h2.copyWith(color: textPrimary),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: GeezSpacing.sm),
             Text(
-              'Geri bildirimin basariyla gonderildi.\nAI asistanin seni daha iyi anlayacak.',
+              'Geri bildirimin başarıyla gönderildi.\nAI asistanın seni daha iyi anlayacak.',
               style: GeezTypography.body.copyWith(
                 color: GeezColors.textSecondary,
               ),
@@ -201,8 +201,8 @@ class _FormBody extends ConsumerWidget {
               children: [
                 _SectionHeader(
                   number: '1',
-                  title: 'Genel Degerlendirme',
-                  subtitle: 'Bu rota deneyiminizi nasil buldunuz?',
+                  title: 'Genel Değerlendirme',
+                  subtitle: 'Bu rota deneyiminizi nasıl buldunuz?',
                   textPrimary: textPrimary,
                 ),
                 const SizedBox(height: GeezSpacing.md),
@@ -231,8 +231,8 @@ class _FormBody extends ConsumerWidget {
               children: [
                 _SectionHeader(
                   number: '2',
-                  title: 'AI Rotasi Dogrulugu',
-                  subtitle: 'AI rotasi ne kadar dogruydu?',
+                  title: 'AI Rotası Doğruluğu',
+                  subtitle: 'AI rotası ne kadar doğruydu?',
                   textPrimary: textPrimary,
                 ),
                 const SizedBox(height: GeezSpacing.md),
@@ -253,8 +253,8 @@ class _FormBody extends ConsumerWidget {
               children: [
                 _SectionHeader(
                   number: '3',
-                  title: 'Onslar',
-                  subtitle: 'En cok ne begendingiz? (birden fazla secebilirsiniz)',
+                  title: 'Öne Çıkanlar',
+                  subtitle: 'En çok ne beğendiniz? (birden fazla seçebilirsiniz)',
                   textPrimary: textPrimary,
                 ),
                 const SizedBox(height: GeezSpacing.md),
@@ -345,7 +345,7 @@ class _FormBody extends ConsumerWidget {
 
           // Submit button
           GeezButton(
-            label: 'Gonder',
+            label: 'Gönder',
             onTap: formState.canSubmit ? onSubmit : null,
             isLoading: formState.isSubmitting,
             isDisabled: formState.overallRating < 1,

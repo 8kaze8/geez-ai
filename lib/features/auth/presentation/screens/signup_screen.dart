@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:geez_ai/core/router/route_names.dart';
 import 'package:geez_ai/core/theme/colors.dart';
 import 'package:geez_ai/core/theme/typography.dart';
 import 'package:geez_ai/core/theme/spacing.dart';
@@ -40,12 +41,12 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
     if (email.isEmpty || password.isEmpty || confirmPassword.isEmpty) return;
 
     if (password != confirmPassword) {
-      setState(() => _passwordMatchError = 'Sifreler uyusmuyor');
+      setState(() => _passwordMatchError = 'Şifreler uyuşmuyor');
       return;
     }
 
     if (password.length < 6) {
-      setState(() => _passwordMatchError = 'Sifre en az 6 karakter olmali');
+      setState(() => _passwordMatchError = 'Şifre en az 6 karakter olmalı');
       return;
     }
 
@@ -75,9 +76,9 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
         // Quiz was completed before signup → go to home.
         // No pending data → go to onboarding so user can take the quiz.
         if (hadPending) {
-          context.go('/');
+          context.go(RoutePaths.home);
         } else {
-          context.go('/onboarding');
+          context.go(RoutePaths.onboarding);
         }
       }
     });
@@ -108,7 +109,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                         ),
                         const SizedBox(height: GeezSpacing.md),
                         Text(
-                          'Hesap Olustur',
+                          'Hesap Oluştur',
                           style: GeezTypography.h1.copyWith(
                             color: isDark
                                 ? GeezColors.textPrimaryDark
@@ -117,7 +118,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                         ),
                         const SizedBox(height: GeezSpacing.sm),
                         Text(
-                          'Kisisel seyahat deneyimine basla',
+                          'Kişisel seyahat deneyimine başla',
                           style: GeezTypography.body.copyWith(
                             color: GeezColors.textSecondary,
                           ),
@@ -177,7 +178,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                   // Password
                   AuthTextField(
                     controller: _passwordController,
-                    label: 'Sifre',
+                    label: 'Şifre',
                     hint: 'En az 6 karakter',
                     isPassword: true,
                     prefixIcon: Icons.lock_outlined,
@@ -188,8 +189,8 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                   // Confirm password
                   AuthTextField(
                     controller: _confirmPasswordController,
-                    label: 'Sifre Tekrar',
-                    hint: 'Sifreni tekrar gir',
+                    label: 'Şifre Tekrar',
+                    hint: 'Şifreni tekrar gir',
                     isPassword: true,
                     prefixIcon: Icons.lock_outlined,
                     textInputAction: TextInputAction.done,
@@ -203,7 +204,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                   SizedBox(
                     width: double.infinity,
                     child: GeezButton(
-                      label: 'Kayit Ol',
+                      label: 'Kayıt Ol',
                       onTap: _handleSignup,
                       isLoading: authState.isLoading,
                       icon: Icons.person_add_rounded,
@@ -218,7 +219,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                       padding: const EdgeInsets.symmetric(
                           horizontal: GeezSpacing.md),
                       child: Text(
-                        'Kayit olarak Kullanim Sartlarini ve Gizlilik Politikasini kabul etmis olursun.',
+                        'Kayıt olarak Kullanım Şartlarını ve Gizlilik Politikasını kabul etmiş olursun.',
                         style: GeezTypography.caption.copyWith(
                           color: GeezColors.textSecondary,
                         ),
@@ -267,15 +268,15 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
-                          'Zaten hesabin var mi? ',
+                          'Zaten hesabın var mı? ',
                           style: GeezTypography.body.copyWith(
                             color: GeezColors.textSecondary,
                           ),
                         ),
                         GestureDetector(
-                          onTap: () => context.go('/login'),
+                          onTap: () => context.go(RoutePaths.login),
                           child: Text(
-                            'Giris Yap',
+                            'Giriş Yap',
                             style: GeezTypography.body.copyWith(
                               color: GeezColors.primary,
                               fontWeight: FontWeight.w600,
