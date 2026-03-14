@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import '../../../../core/theme/colors.dart';
-import '../../../../core/theme/spacing.dart';
-import '../../../../core/theme/typography.dart';
-import '../../domain/mock_data.dart';
+import 'package:geez_ai/core/theme/colors.dart';
+import 'package:geez_ai/core/theme/spacing.dart';
+import 'package:geez_ai/core/theme/typography.dart';
+import 'package:geez_ai/features/route/domain/route_model.dart';
 
 class ActiveRouteCard extends StatelessWidget {
   const ActiveRouteCard({
@@ -11,15 +11,19 @@ class ActiveRouteCard extends StatelessWidget {
     this.onContinue,
   });
 
-  final MockRoute route;
+  final RouteModel route;
   final VoidCallback? onContinue;
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final surfaceColor = isDark ? GeezColors.surfaceDark : GeezColors.surface;
-    final textColor = isDark ? GeezColors.textPrimaryDark : GeezColors.textPrimary;
-    final mutedColor = isDark ? GeezColors.textSecondaryDark : GeezColors.textSecondary;
+    final textColor =
+        isDark ? GeezColors.textPrimaryDark : GeezColors.textPrimary;
+    final mutedColor =
+        isDark ? GeezColors.textSecondaryDark : GeezColors.textSecondary;
+
+    final dateLabel = _formatDate(route.createdAt);
 
     return Container(
       decoration: BoxDecoration(
@@ -71,7 +75,7 @@ class ActiveRouteCard extends StatelessWidget {
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        '${route.date}  |  ${route.stopCount} durak',
+                        '$dateLabel  |  ${route.durationDays} gun',
                         style: GeezTypography.caption.copyWith(
                           color: mutedColor,
                         ),
@@ -83,47 +87,24 @@ class ActiveRouteCard extends StatelessWidget {
             ),
             const SizedBox(height: GeezSpacing.md),
 
-            // Progress section
+            // City + country badge row
             Row(
               children: [
-                Expanded(
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(4),
-                    child: SizedBox(
-                      height: 6,
-                      child: Stack(
-                        children: [
-                          Container(
-                            color: isDark
-                                ? Colors.white.withValues(alpha: 0.1)
-                                : Colors.grey.shade200,
-                          ),
-                          FractionallySizedBox(
-                            widthFactor: route.completionPercent,
-                            child: Container(
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  colors: [
-                                    GeezColors.primary,
-                                    GeezColors.primary.withValues(alpha: 0.7),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
+                Icon(
+                  Icons.location_on_outlined,
+                  size: 14,
+                  color: mutedColor,
                 ),
-                const SizedBox(width: GeezSpacing.sm + 4),
+                const SizedBox(width: GeezSpacing.xs),
                 Text(
-                  '%${(route.completionPercent * 100).toInt()}',
-                  style: GeezTypography.bodySmall.copyWith(
-                    color: GeezColors.primary,
-                    fontWeight: FontWeight.w600,
+                  '${route.city}, ${route.country}',
+                  style: GeezTypography.caption.copyWith(
+                    color: mutedColor,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
+                const Spacer(),
+                _StyleChip(travelStyle: route.travelStyle, isDark: isDark),
               ],
             ),
             const SizedBox(height: GeezSpacing.md),
@@ -137,18 +118,18 @@ class ActiveRouteCard extends StatelessWidget {
             ),
             const SizedBox(height: GeezSpacing.md),
 
-            // Next stop + continue button
+            // Continue button row
             Row(
               children: [
                 Icon(
-                  Icons.arrow_forward_rounded,
+                  Icons.play_arrow_rounded,
                   size: 16,
                   color: GeezColors.secondary,
                 ),
                 const SizedBox(width: GeezSpacing.xs + 2),
                 Expanded(
                   child: Text(
-                    'Sonraki: ${route.nextStop}',
+                    'Devam etmeye hazir',
                     style: GeezTypography.bodySmall.copyWith(
                       color: textColor,
                       fontWeight: FontWeight.w500,
@@ -163,7 +144,73 @@ class ActiveRouteCard extends StatelessWidget {
       ),
     );
   }
+
+  String _formatDate(DateTime? dt) {
+    if (dt == null) return '';
+    return '${dt.day} ${_monthTr(dt.month)} ${dt.year}';
+  }
+
+  String _monthTr(int month) {
+    const months = [
+      'Oca', 'Sub', 'Mar', 'Nis', 'May', 'Haz',
+      'Tem', 'Agu', 'Eyl', 'Eki', 'Kas', 'Ara',
+    ];
+    return months[month - 1];
+  }
 }
+
+// ---------------------------------------------------------------------------
+// Travel style chip
+// ---------------------------------------------------------------------------
+
+class _StyleChip extends StatelessWidget {
+  const _StyleChip({required this.travelStyle, required this.isDark});
+
+  final String travelStyle;
+  final bool isDark;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: GeezSpacing.sm + 2,
+        vertical: GeezSpacing.xs,
+      ),
+      decoration: BoxDecoration(
+        color: GeezColors.accent.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(GeezRadius.chip),
+      ),
+      child: Text(
+        _labelTr(travelStyle),
+        style: GeezTypography.caption.copyWith(
+          color: GeezColors.accent,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+    );
+  }
+
+  String _labelTr(String style) {
+    switch (style) {
+      case 'historical':
+        return 'Tarih';
+      case 'food':
+        return 'Yemek';
+      case 'adventure':
+        return 'Macera';
+      case 'nature':
+        return 'Doga';
+      case 'mixed':
+        return 'Karma';
+      default:
+        return style;
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Continue button
+// ---------------------------------------------------------------------------
 
 class _ContinueButton extends StatelessWidget {
   const _ContinueButton({this.onTap});

@@ -1,173 +1,184 @@
 import 'package:flutter/material.dart';
-import '../../../../core/theme/colors.dart';
-import '../../../../core/theme/spacing.dart';
-import '../../../../core/theme/typography.dart';
-import '../../../../shared/widgets/geez_card.dart';
-import '../../domain/mock_data.dart';
-import '../widgets/active_route_card.dart';
-import '../widgets/discovery_bar.dart';
-import '../widgets/suggestion_card.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:geez_ai/core/theme/colors.dart';
+import 'package:geez_ai/core/theme/spacing.dart';
+import 'package:geez_ai/core/theme/typography.dart';
+import 'package:geez_ai/features/home/presentation/providers/home_provider.dart';
+import 'package:geez_ai/features/home/presentation/widgets/active_route_card.dart';
+import 'package:geez_ai/features/home/presentation/widgets/discovery_bar.dart';
+import 'package:geez_ai/features/home/presentation/widgets/suggestion_card.dart';
+import 'package:geez_ai/features/route/domain/route_model.dart';
+import 'package:geez_ai/shared/widgets/geez_button.dart';
+import 'package:geez_ai/shared/widgets/geez_card.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final bgColor = isDark ? GeezColors.backgroundDark : GeezColors.background;
-    final textColor = isDark ? GeezColors.textPrimaryDark : GeezColors.textPrimary;
-    final mutedColor = isDark ? GeezColors.textSecondaryDark : GeezColors.textSecondary;
+    final bgColor =
+        isDark ? GeezColors.backgroundDark : GeezColors.background;
 
     return Scaffold(
       backgroundColor: bgColor,
       body: SafeArea(
-        child: CustomScrollView(
-          slivers: [
-            // --- Header ---
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(
-                  GeezSpacing.lg,
-                  GeezSpacing.lg,
-                  GeezSpacing.lg,
-                  GeezSpacing.md,
-                ),
-                child: _Header(
-                  textColor: textColor,
-                  mutedColor: mutedColor,
-                  isDark: isDark,
-                ),
+        child: ref.watch(homeProvider).when(
+              loading: () => const _HomeLoadingState(),
+              error: (error, _) => _HomeErrorState(
+                onRetry: () => ref.read(homeProvider.notifier).refresh(),
               ),
+              data: (data) => _HomeContent(data: data, isDark: isDark),
             ),
+      ),
+    );
+  }
+}
 
-            // --- Discovery Score Bar ---
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: GeezSpacing.lg,
-                ),
-                child: const DiscoveryBar(data: sampleDiscoveryScore),
-              ),
-            ),
+// ---------------------------------------------------------------------------
+// Loading state
+// ---------------------------------------------------------------------------
 
-            // --- Section: Aktif Rota ---
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(
-                  GeezSpacing.lg,
-                  GeezSpacing.lg + 4,
-                  GeezSpacing.lg,
-                  GeezSpacing.sm,
-                ),
-                child: _SectionHeader(
-                  title: 'Aktif Rota',
-                  textColor: textColor,
-                ),
-              ),
-            ),
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: GeezSpacing.lg,
-                ),
-                child: ActiveRouteCard(
-                  route: sampleActiveRoute,
-                  onContinue: () {},
-                ),
-              ),
-            ),
+class _HomeLoadingState extends StatelessWidget {
+  const _HomeLoadingState();
 
-            // --- Section: Sana Ozel ---
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(
-                  GeezSpacing.lg,
-                  GeezSpacing.lg + 4,
-                  GeezSpacing.lg,
-                  GeezSpacing.sm,
-                ),
-                child: _SectionHeader(
-                  title: 'Sana Ozel',
-                  textColor: textColor,
-                  trailing: Text(
-                    'Tumu',
-                    style: GeezTypography.bodySmall.copyWith(
-                      color: GeezColors.primary,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            SliverToBoxAdapter(
-              child: SizedBox(
-                height: 250,
-                child: ListView.separated(
-                  scrollDirection: Axis.horizontal,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: GeezSpacing.lg,
-                  ),
-                  itemCount: sampleSuggestions.length,
-                  separatorBuilder: (_, _) =>
-                      const SizedBox(width: GeezSpacing.md),
-                  itemBuilder: (context, index) {
-                    return SuggestionCard(
-                      suggestion: sampleSuggestions[index],
-                      onPlan: () {},
-                    );
-                  },
-                ),
-              ),
-            ),
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final shimmerBase = isDark
+        ? Colors.white.withValues(alpha: 0.06)
+        : Colors.grey.shade200;
 
-            // --- Section: Son Kesifler ---
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(
-                  GeezSpacing.lg,
-                  GeezSpacing.lg + 4,
-                  GeezSpacing.lg,
-                  GeezSpacing.sm,
-                ),
-                child: _SectionHeader(
-                  title: 'Son Kesifler',
-                  textColor: textColor,
-                ),
-              ),
+    return CustomScrollView(
+      slivers: [
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(
+              GeezSpacing.lg,
+              GeezSpacing.lg,
+              GeezSpacing.lg,
+              GeezSpacing.md,
             ),
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: GeezSpacing.lg,
-                ),
-                child: GeezCard(
-                  padding: EdgeInsets.zero,
+            child: Row(
+              children: [
+                _ShimmerBox(width: 44, height: 44, radius: 22, color: shimmerBase),
+                const SizedBox(width: GeezSpacing.sm + 4),
+                Expanded(
                   child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      for (int i = 0; i < sampleDiscoveries.length; i++) ...[
-                        _DiscoveryTile(
-                          discovery: sampleDiscoveries[i],
-                          isDark: isDark,
-                        ),
-                        if (i < sampleDiscoveries.length - 1)
-                          Divider(
-                            height: 1,
-                            indent: GeezSpacing.md,
-                            endIndent: GeezSpacing.md,
-                            color: isDark
-                                ? Colors.white.withValues(alpha: 0.06)
-                                : Colors.grey.shade100,
-                          ),
-                      ],
+                      _ShimmerBox(
+                          width: 140, height: 16, radius: 8, color: shimmerBase),
+                      const SizedBox(height: 6),
+                      _ShimmerBox(
+                          width: 200, height: 12, radius: 6, color: shimmerBase),
                     ],
                   ),
                 ),
-              ),
+              ],
             ),
+          ),
+        ),
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: GeezSpacing.lg),
+            child: _ShimmerBox(
+                width: double.infinity, height: 88, radius: 12, color: shimmerBase),
+          ),
+        ),
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(
+              GeezSpacing.lg,
+              GeezSpacing.lg + 4,
+              GeezSpacing.lg,
+              GeezSpacing.sm,
+            ),
+            child: _ShimmerBox(
+                width: 120, height: 20, radius: 8, color: shimmerBase),
+          ),
+        ),
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: GeezSpacing.lg),
+            child: _ShimmerBox(
+                width: double.infinity, height: 130, radius: 16, color: shimmerBase),
+          ),
+        ),
+        const SliverToBoxAdapter(
+          child: SizedBox(height: GeezSpacing.xxl + GeezSpacing.xl),
+        ),
+      ],
+    );
+  }
+}
 
-            // Bottom spacing for nav bar
-            const SliverToBoxAdapter(
-              child: SizedBox(height: GeezSpacing.xxl + GeezSpacing.xl),
+class _ShimmerBox extends StatelessWidget {
+  const _ShimmerBox({
+    required this.width,
+    required this.height,
+    required this.radius,
+    required this.color,
+  });
+
+  final double width;
+  final double height;
+  final double radius;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: width,
+      height: height,
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.circular(radius),
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Error state
+// ---------------------------------------------------------------------------
+
+class _HomeErrorState extends StatelessWidget {
+  const _HomeErrorState({required this.onRetry});
+
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textColor =
+        isDark ? GeezColors.textPrimaryDark : GeezColors.textPrimary;
+    final mutedColor =
+        isDark ? GeezColors.textSecondaryDark : GeezColors.textSecondary;
+
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(GeezSpacing.xl),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('\u{1F4F5}', style: TextStyle(fontSize: 48)),
+            const SizedBox(height: GeezSpacing.md),
+            Text(
+              'Bir sorun olustu',
+              style: GeezTypography.h3.copyWith(color: textColor),
+            ),
+            const SizedBox(height: GeezSpacing.sm),
+            Text(
+              'Veriler yuklenemedi. Lutfen tekrar dene.',
+              style: GeezTypography.bodySmall.copyWith(color: mutedColor),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: GeezSpacing.lg),
+            GeezButton(
+              label: 'Tekrar Dene',
+              onTap: onRetry,
+              icon: Icons.refresh_rounded,
             ),
           ],
         ),
@@ -176,20 +187,221 @@ class HomeScreen extends StatelessWidget {
   }
 }
 
-// --- Header ---
+// ---------------------------------------------------------------------------
+// Loaded content
+// ---------------------------------------------------------------------------
+
+class _HomeContent extends StatelessWidget {
+  const _HomeContent({required this.data, required this.isDark});
+
+  final HomeData data;
+  final bool isDark;
+
+  @override
+  Widget build(BuildContext context) {
+    final textColor =
+        isDark ? GeezColors.textPrimaryDark : GeezColors.textPrimary;
+    final mutedColor =
+        isDark ? GeezColors.textSecondaryDark : GeezColors.textSecondary;
+
+    return CustomScrollView(
+      slivers: [
+        // --- Header ---
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(
+              GeezSpacing.lg,
+              GeezSpacing.lg,
+              GeezSpacing.lg,
+              GeezSpacing.md,
+            ),
+            child: _Header(
+              displayName: data.displayName,
+              textColor: textColor,
+              mutedColor: mutedColor,
+              isDark: isDark,
+            ),
+          ),
+        ),
+
+        // --- Discovery Score Bar ---
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: GeezSpacing.lg),
+            child: DiscoveryBar(
+              score: data.discoveryScore,
+              tier: data.tierLabel,
+              nextTier: data.nextTierLabel,
+              pointsToNext: data.pointsToNextTier,
+              progress: data.tierProgress,
+            ),
+          ),
+        ),
+
+        // --- New user welcome OR active route ---
+        if (data.isNewUser) ...[
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(
+                GeezSpacing.lg,
+                GeezSpacing.lg + 4,
+                GeezSpacing.lg,
+                GeezSpacing.sm,
+              ),
+              child: _WelcomeBanner(isDark: isDark),
+            ),
+          ),
+        ] else ...[
+          // Section: Aktif Rota
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(
+                GeezSpacing.lg,
+                GeezSpacing.lg + 4,
+                GeezSpacing.lg,
+                GeezSpacing.sm,
+              ),
+              child: _SectionHeader(
+                title: 'Aktif Rota',
+                textColor: textColor,
+              ),
+            ),
+          ),
+          SliverToBoxAdapter(
+            child: Padding(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: GeezSpacing.lg),
+              child: data.activeRoute != null
+                  ? ActiveRouteCard(
+                      route: data.activeRoute!,
+                      onContinue: () {},
+                    )
+                  : _NoActiveRouteCard(isDark: isDark),
+            ),
+          ),
+        ],
+
+        // --- Section: Sana Ozel ---
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(
+              GeezSpacing.lg,
+              GeezSpacing.lg + 4,
+              GeezSpacing.lg,
+              GeezSpacing.sm,
+            ),
+            child: _SectionHeader(
+              title: 'Sana Ozel',
+              textColor: textColor,
+              trailing: Text(
+                'Tumu',
+                style: GeezTypography.bodySmall.copyWith(
+                  color: GeezColors.primary,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ),
+        ),
+        SliverToBoxAdapter(
+          child: SizedBox(
+            height: 250,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(
+                horizontal: GeezSpacing.lg,
+              ),
+              itemCount: kSampleSuggestions.length,
+              separatorBuilder: (_, __) =>
+                  const SizedBox(width: GeezSpacing.md),
+              itemBuilder: (context, index) {
+                return SuggestionCard(
+                  suggestion: kSampleSuggestions[index],
+                  onPlan: () {},
+                );
+              },
+            ),
+          ),
+        ),
+
+        // --- Section: Son Rotalar ---
+        if (data.recentRoutes.isNotEmpty) ...[
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(
+                GeezSpacing.lg,
+                GeezSpacing.lg + 4,
+                GeezSpacing.lg,
+                GeezSpacing.sm,
+              ),
+              child: _SectionHeader(
+                title: 'Son Rotalar',
+                textColor: textColor,
+              ),
+            ),
+          ),
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: GeezSpacing.lg,
+              ),
+              child: GeezCard(
+                padding: EdgeInsets.zero,
+                child: Column(
+                  children: [
+                    for (int i = 0; i < data.recentRoutes.length; i++) ...[
+                      _RecentRouteTile(
+                        route: data.recentRoutes[i],
+                        isDark: isDark,
+                      ),
+                      if (i < data.recentRoutes.length - 1)
+                        Divider(
+                          height: 1,
+                          indent: GeezSpacing.md,
+                          endIndent: GeezSpacing.md,
+                          color: isDark
+                              ? Colors.white.withValues(alpha: 0.06)
+                              : Colors.grey.shade100,
+                        ),
+                    ],
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+
+        // Bottom spacing for nav bar
+        const SliverToBoxAdapter(
+          child: SizedBox(height: GeezSpacing.xxl + GeezSpacing.xl),
+        ),
+      ],
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Header
+// ---------------------------------------------------------------------------
+
 class _Header extends StatelessWidget {
   const _Header({
+    required this.displayName,
     required this.textColor,
     required this.mutedColor,
     required this.isDark,
   });
 
+  final String displayName;
   final Color textColor;
   final Color mutedColor;
   final bool isDark;
 
   @override
   Widget build(BuildContext context) {
+    final initial =
+        displayName.isNotEmpty ? displayName[0].toUpperCase() : 'G';
+
     return Row(
       children: [
         // Avatar
@@ -204,10 +416,10 @@ class _Header extends StatelessWidget {
             ),
             borderRadius: BorderRadius.circular(GeezRadius.avatar),
           ),
-          child: const Center(
+          child: Center(
             child: Text(
-              'K',
-              style: TextStyle(
+              initial,
+              style: const TextStyle(
                 color: Colors.white,
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
@@ -223,16 +435,12 @@ class _Header extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Merhaba, Kaze!',
-                style: GeezTypography.h3.copyWith(
-                  color: textColor,
-                ),
+                'Merhaba, $displayName!',
+                style: GeezTypography.h3.copyWith(color: textColor),
               ),
               Text(
                 'Bugun nereyi kesfedeceksin?',
-                style: GeezTypography.caption.copyWith(
-                  color: mutedColor,
-                ),
+                style: GeezTypography.caption.copyWith(color: mutedColor),
               ),
             ],
           ),
@@ -242,7 +450,7 @@ class _Header extends StatelessWidget {
         _IconButton(
           icon: Icons.notifications_outlined,
           isDark: isDark,
-          badgeCount: 2,
+          badgeCount: 0,
           onTap: () {},
         ),
         const SizedBox(width: GeezSpacing.sm),
@@ -258,7 +466,10 @@ class _Header extends StatelessWidget {
   }
 }
 
-// --- Icon Button with optional badge ---
+// ---------------------------------------------------------------------------
+// Icon button with optional badge
+// ---------------------------------------------------------------------------
+
 class _IconButton extends StatelessWidget {
   const _IconButton({
     required this.icon,
@@ -274,12 +485,10 @@ class _IconButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bgColor = isDark
-        ? Colors.white.withValues(alpha: 0.08)
-        : Colors.grey.shade100;
-    final iconColor = isDark
-        ? GeezColors.textPrimaryDark
-        : GeezColors.textPrimary;
+    final bgColor =
+        isDark ? Colors.white.withValues(alpha: 0.08) : Colors.grey.shade100;
+    final iconColor =
+        isDark ? GeezColors.textPrimaryDark : GeezColors.textPrimary;
 
     return GestureDetector(
       onTap: onTap,
@@ -324,7 +533,10 @@ class _IconButton extends StatelessWidget {
   }
 }
 
-// --- Section Header ---
+// ---------------------------------------------------------------------------
+// Section header
+// ---------------------------------------------------------------------------
+
 class _SectionHeader extends StatelessWidget {
   const _SectionHeader({
     required this.title,
@@ -361,25 +573,116 @@ class _SectionHeader extends StatelessWidget {
             ),
           ],
         ),
-        if (trailing != null) trailing!,  // ignore: use_null_aware_elements
+        if (trailing != null) trailing!,
       ],
     );
   }
 }
 
-// --- Discovery Tile ---
-class _DiscoveryTile extends StatelessWidget {
-  const _DiscoveryTile({
-    required this.discovery,
-    required this.isDark,
-  });
+// ---------------------------------------------------------------------------
+// Welcome banner (new users)
+// ---------------------------------------------------------------------------
 
-  final MockDiscovery discovery;
+class _WelcomeBanner extends StatelessWidget {
+  const _WelcomeBanner({required this.isDark});
+
   final bool isDark;
 
   @override
   Widget build(BuildContext context) {
-    final textColor = isDark ? GeezColors.textPrimaryDark : GeezColors.textPrimary;
+    final textColor =
+        isDark ? GeezColors.textPrimaryDark : GeezColors.textPrimary;
+    final mutedColor =
+        isDark ? GeezColors.textSecondaryDark : GeezColors.textSecondary;
+
+    return GeezCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text('\u{1F30D}', style: TextStyle(fontSize: 36)),
+          const SizedBox(height: GeezSpacing.sm),
+          Text(
+            'Ilk rotani olustur!',
+            style: GeezTypography.h3.copyWith(color: textColor),
+          ),
+          const SizedBox(height: GeezSpacing.xs),
+          Text(
+            'Birka\u{00E7} soruya cevap ver, yapay zeka sana ozel bir rota hazirlasin.',
+            style: GeezTypography.bodySmall.copyWith(color: mutedColor),
+          ),
+          const SizedBox(height: GeezSpacing.md),
+          GeezButton(
+            label: 'Rota Olustur',
+            onTap: () {},
+            icon: Icons.add_rounded,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// No active route card
+// ---------------------------------------------------------------------------
+
+class _NoActiveRouteCard extends StatelessWidget {
+  const _NoActiveRouteCard({required this.isDark});
+
+  final bool isDark;
+
+  @override
+  Widget build(BuildContext context) {
+    final mutedColor =
+        isDark ? GeezColors.textSecondaryDark : GeezColors.textSecondary;
+
+    return GeezCard(
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(GeezSpacing.sm),
+            decoration: BoxDecoration(
+              color: isDark
+                  ? Colors.white.withValues(alpha: 0.06)
+                  : Colors.grey.shade100,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: const Icon(
+              Icons.route_outlined,
+              size: 24,
+              color: GeezColors.primary,
+            ),
+          ),
+          const SizedBox(width: GeezSpacing.sm + 4),
+          Expanded(
+            child: Text(
+              'Aktif bir rotaniz yok. Yeni bir tane baslatmak ister misiniz?',
+              style: GeezTypography.bodySmall.copyWith(color: mutedColor),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Recent route tile
+// ---------------------------------------------------------------------------
+
+class _RecentRouteTile extends StatelessWidget {
+  const _RecentRouteTile({
+    required this.route,
+    required this.isDark,
+  });
+
+  final RouteModel route;
+  final bool isDark;
+
+  @override
+  Widget build(BuildContext context) {
+    final textColor =
+        isDark ? GeezColors.textPrimaryDark : GeezColors.textPrimary;
 
     return Padding(
       padding: const EdgeInsets.symmetric(
@@ -398,65 +701,61 @@ class _DiscoveryTile extends StatelessWidget {
                   : GeezColors.background,
               borderRadius: BorderRadius.circular(10),
             ),
-            child: Center(
-              child: Text(
-                discovery.icon,
-                style: const TextStyle(fontSize: 18),
+            child: const Center(
+              child: Icon(
+                Icons.place_outlined,
+                size: 20,
+                color: GeezColors.primary,
               ),
             ),
           ),
           const SizedBox(width: GeezSpacing.sm + 4),
 
-          // Place name
+          // Route name + city
           Expanded(
-            child: Text(
-              discovery.placeName,
-              style: GeezTypography.bodySmall.copyWith(
-                color: textColor,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ),
-
-          // Score or rating
-          if (discovery.rating != null)
-            Row(
-              mainAxisSize: MainAxisSize.min,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Icon(
-                  Icons.star_rounded,
-                  color: GeezColors.warning,
-                  size: 16,
-                ),
-                const SizedBox(width: 2),
                 Text(
-                  '${discovery.rating}',
+                  route.title,
                   style: GeezTypography.bodySmall.copyWith(
                     color: textColor,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  '${route.city}, ${route.country}',
+                  style: GeezTypography.caption.copyWith(
+                    color: isDark
+                        ? GeezColors.textSecondaryDark
+                        : GeezColors.textSecondary,
                   ),
                 ),
               ],
-            )
-          else
-            Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: GeezSpacing.sm,
-                vertical: GeezSpacing.xs,
-              ),
-              decoration: BoxDecoration(
-                color: GeezColors.accent.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(GeezRadius.chip),
-              ),
-              child: Text(
-                '+${discovery.score}',
-                style: GeezTypography.caption.copyWith(
-                  color: GeezColors.accent,
-                  fontWeight: FontWeight.w600,
-                ),
+            ),
+          ),
+
+          // Completed badge
+          Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: GeezSpacing.sm,
+              vertical: GeezSpacing.xs,
+            ),
+            decoration: BoxDecoration(
+              color: GeezColors.accent.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(GeezRadius.chip),
+            ),
+            child: Text(
+              'Tamamlandi',
+              style: GeezTypography.caption.copyWith(
+                color: GeezColors.accent,
+                fontWeight: FontWeight.w600,
               ),
             ),
+          ),
         ],
       ),
     );

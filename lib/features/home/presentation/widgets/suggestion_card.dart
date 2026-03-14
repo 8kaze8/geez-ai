@@ -1,8 +1,47 @@
 import 'package:flutter/material.dart';
-import '../../../../core/theme/colors.dart';
-import '../../../../core/theme/spacing.dart';
-import '../../../../core/theme/typography.dart';
-import '../../domain/mock_data.dart';
+import 'package:geez_ai/core/theme/colors.dart';
+import 'package:geez_ai/core/theme/spacing.dart';
+import 'package:geez_ai/core/theme/typography.dart';
+
+/// Lightweight data class for a destination suggestion shown on the Home screen.
+///
+/// AI-powered suggestions are a Phase 2 feature. For now, the screen uses a
+/// hardcoded list defined in [kSampleSuggestions].
+class HomeSuggestion {
+  const HomeSuggestion({
+    required this.city,
+    required this.country,
+    required this.flag,
+    required this.reason,
+  });
+
+  final String city;
+  final String country;
+  final String flag;
+  final String reason;
+}
+
+/// Static suggestions shown until AI-powered personalised suggestions land.
+const List<HomeSuggestion> kSampleSuggestions = [
+  HomeSuggestion(
+    city: 'Roma',
+    country: 'Italya',
+    flag: '\u{1F1EE}\u{1F1F9}',
+    reason: 'Tarih sever olarak kacirma',
+  ),
+  HomeSuggestion(
+    city: 'Atina',
+    country: 'Yunanistan',
+    flag: '\u{1F1EC}\u{1F1F7}',
+    reason: 'Acik hava + antik ruins',
+  ),
+  HomeSuggestion(
+    city: 'Barselona',
+    country: 'Ispanya',
+    flag: '\u{1F1EA}\u{1F1F8}',
+    reason: 'Gaudi + street food cenneti',
+  ),
+];
 
 class SuggestionCard extends StatelessWidget {
   const SuggestionCard({
@@ -11,13 +50,14 @@ class SuggestionCard extends StatelessWidget {
     this.onPlan,
   });
 
-  final MockSuggestion suggestion;
+  final HomeSuggestion suggestion;
   final VoidCallback? onPlan;
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final textColor = isDark ? GeezColors.textPrimaryDark : GeezColors.textPrimary;
+    final textColor =
+        isDark ? GeezColors.textPrimaryDark : GeezColors.textPrimary;
 
     return Container(
       width: 180,
@@ -44,7 +84,7 @@ class SuggestionCard extends StatelessWidget {
               child: Stack(
                 fit: StackFit.expand,
                 children: [
-                  // Placeholder image area with themed gradient
+                  // Placeholder gradient based on city
                   Container(
                     decoration: BoxDecoration(
                       gradient: LinearGradient(

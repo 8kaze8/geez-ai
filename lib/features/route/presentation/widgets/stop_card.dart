@@ -2,18 +2,25 @@ import 'package:flutter/material.dart';
 import 'package:geez_ai/core/theme/colors.dart';
 import 'package:geez_ai/core/theme/spacing.dart';
 import 'package:geez_ai/core/theme/typography.dart';
-import 'package:geez_ai/features/route/domain/mock_route_data.dart';
+import 'package:geez_ai/features/route/domain/route_stop_model.dart';
 
 class StopCard extends StatefulWidget {
   const StopCard({
     super.key,
     required this.stop,
-    this.travelSegment,
+    this.travelFromNextMin,
+    this.travelModeFromNext,
     this.isLast = false,
   });
 
-  final RouteStop stop;
-  final TravelSegment? travelSegment;
+  final RouteStopModel stop;
+
+  /// Minutes to travel from this stop to the next one (null for last stop).
+  final int? travelFromNextMin;
+
+  /// Mode string for the travel connector (e.g. "walking", "transit").
+  final String? travelModeFromNext;
+
   final bool isLast;
 
   @override
@@ -49,7 +56,8 @@ class _StopCardState extends State<StopCard>
               ),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: _isExpanded ? 0.08 : 0.04),
+                  color: Colors.black
+                      .withValues(alpha: _isExpanded ? 0.08 : 0.04),
                   blurRadius: _isExpanded ? 16 : 8,
                   offset: const Offset(0, 2),
                 ),
@@ -83,16 +91,21 @@ class _StopCardState extends State<StopCard>
           ),
         ),
 
-        // Travel segment connector
-        if (!widget.isLast && widget.travelSegment != null)
+        // Travel connector to next stop
+        if (!widget.isLast && widget.travelFromNextMin != null)
           _TravelConnector(
-            segment: widget.travelSegment!,
+            durationMin: widget.travelFromNextMin!,
+            mode: widget.travelModeFromNext,
             isDark: isDark,
           ),
       ],
     );
   }
 }
+
+// ---------------------------------------------------------------------------
+// Collapsed header
+// ---------------------------------------------------------------------------
 
 class _CollapsedHeader extends StatelessWidget {
   const _CollapsedHeader({
@@ -101,7 +114,7 @@ class _CollapsedHeader extends StatelessWidget {
     required this.isDark,
   });
 
-  final RouteStop stop;
+  final RouteStopModel stop;
   final bool isExpanded;
   final bool isDark;
 
@@ -121,7 +134,7 @@ class _CollapsedHeader extends StatelessWidget {
             ),
             child: Center(
               child: Text(
-                '${stop.number}',
+                '${stop.stopOrder}',
                 style: GeezTypography.bodySmall.copyWith(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
@@ -131,13 +144,13 @@ class _CollapsedHeader extends StatelessWidget {
           ),
           const SizedBox(width: 12),
 
-          // Name + time
+          // Name + time range
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  stop.name,
+                  stop.placeName,
                   style: GeezTypography.body.copyWith(
                     color: isDark
                         ? GeezColors.textPrimaryDark
@@ -147,7 +160,7 @@ class _CollapsedHeader extends StatelessWidget {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  '${stop.timeStart}-${stop.timeEnd}',
+                  _timeRange(stop),
                   style: GeezTypography.caption.copyWith(
                     color: isDark
                         ? GeezColors.textSecondaryDark
@@ -158,32 +171,33 @@ class _CollapsedHeader extends StatelessWidget {
             ),
           ),
 
-          // Rating + price
+          // Rating + entry fee
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(Icons.star_rounded,
-                      size: 16, color: Color(0xFFFFC107)),
-                  const SizedBox(width: 2),
-                  Text(
-                    stop.rating.toString(),
-                    style: GeezTypography.bodySmall.copyWith(
-                      color: isDark
-                          ? GeezColors.textPrimaryDark
-                          : GeezColors.textPrimary,
-                      fontWeight: FontWeight.w600,
+              if (stop.googleRating != null)
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.star_rounded,
+                        size: 16, color: Color(0xFFFFC107)),
+                    const SizedBox(width: 2),
+                    Text(
+                      stop.googleRating!.toStringAsFixed(1),
+                      style: GeezTypography.bodySmall.copyWith(
+                        color: isDark
+                            ? GeezColors.textPrimaryDark
+                            : GeezColors.textPrimary,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
-                  ),
-                ],
-              ),
+                  ],
+                ),
               const SizedBox(height: 2),
               Text(
-                stop.price,
+                _priceLabel(stop),
                 style: GeezTypography.caption.copyWith(
-                  color: stop.price == 'Ücretsiz'
+                  color: stop.entryFeeAmount == null || stop.entryFeeAmount == 0
                       ? GeezColors.success
                       : (isDark
                           ? GeezColors.textSecondaryDark
@@ -209,7 +223,28 @@ class _CollapsedHeader extends StatelessWidget {
       ),
     );
   }
+
+  String _timeRange(RouteStopModel stop) {
+    final start = stop.suggestedStartTime;
+    final end = stop.suggestedEndTime;
+    if (start != null && end != null) return '$start-$end';
+    if (start != null) return start;
+    final dur = stop.estimatedDurationMin;
+    if (dur != null) return '$dur dk';
+    return '';
+  }
+
+  String _priceLabel(RouteStopModel stop) {
+    if (stop.entryFeeText != null) return stop.entryFeeText!;
+    final amount = stop.entryFeeAmount;
+    if (amount == null || amount == 0) return 'Ücretsiz';
+    return '${stop.entryFeeCurrency} ${amount.toStringAsFixed(0)}';
+  }
 }
+
+// ---------------------------------------------------------------------------
+// Expanded content
+// ---------------------------------------------------------------------------
 
 class _ExpandedContent extends StatelessWidget {
   const _ExpandedContent({
@@ -217,7 +252,7 @@ class _ExpandedContent extends StatelessWidget {
     required this.isDark,
   });
 
-  final RouteStop stop;
+  final RouteStopModel stop;
   final bool isDark;
 
   @override
@@ -236,90 +271,119 @@ class _ExpandedContent extends StatelessWidget {
           const SizedBox(height: 12),
 
           // Description
-          Text(
-            stop.description,
-            style: GeezTypography.bodySmall.copyWith(
-              color: isDark
-                  ? GeezColors.textPrimaryDark
-                  : GeezColors.textPrimary,
+          if (stop.description != null) ...[
+            Text(
+              stop.description!,
+              style: GeezTypography.bodySmall.copyWith(
+                color: isDark
+                    ? GeezColors.textPrimaryDark
+                    : GeezColors.textPrimary,
+              ),
             ),
-          ),
-          const SizedBox(height: GeezSpacing.md),
+            const SizedBox(height: GeezSpacing.md),
+          ],
 
-          // AI Insight
-          _InfoSection(
-            emoji: '💡',
-            title: 'AI Insight',
-            content: stop.insiderTip,
-            backgroundColor: GeezColors.primary.withValues(alpha: 0.06),
-            isDark: isDark,
-          ),
-          const SizedBox(height: 10),
-
-          // Review Summary
-          _InfoSection(
-            emoji: '📝',
-            title: 'Review Özeti (${_formatCount(stop.reviewCount)})',
-            content: stop.reviewSummary,
-            backgroundColor: GeezColors.secondary.withValues(alpha: 0.06),
-            isDark: isDark,
-          ),
-          const SizedBox(height: 10),
-
-          // Fun Fact
-          _InfoSection(
-            emoji: '🎯',
-            title: 'Fun Fact',
-            content: stop.funFact,
-            backgroundColor: GeezColors.accent.withValues(alpha: 0.06),
-            isDark: isDark,
-          ),
-          const SizedBox(height: GeezSpacing.md),
-
-          // Practical details
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: isDark
-                  ? const Color(0xFF252528)
-                  : const Color(0xFFF8F8F8),
-              borderRadius: BorderRadius.circular(12),
+          // AI Insight / Insider tip
+          if (stop.insiderTip != null) ...[
+            _InfoSection(
+              emoji: '💡',
+              title: 'AI Insight',
+              content: stop.insiderTip!,
+              backgroundColor: GeezColors.primary.withValues(alpha: 0.06),
+              isDark: isDark,
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Detaylar',
-                  style: GeezTypography.bodySmall.copyWith(
-                    fontWeight: FontWeight.w600,
-                    color: isDark
-                        ? GeezColors.textPrimaryDark
-                        : GeezColors.textPrimary,
+            const SizedBox(height: 10),
+          ],
+
+          // Review summary
+          if (stop.reviewSummary != null) ...[
+            _InfoSection(
+              emoji: '📝',
+              title: stop.reviewCount != null
+                  ? 'Review Özeti (${_formatCount(stop.reviewCount!)})'
+                  : 'Review Özeti',
+              content: stop.reviewSummary!,
+              backgroundColor: GeezColors.secondary.withValues(alpha: 0.06),
+              isDark: isDark,
+            ),
+            const SizedBox(height: 10),
+          ],
+
+          // Fun fact
+          if (stop.funFact != null) ...[
+            _InfoSection(
+              emoji: '🎯',
+              title: 'Fun Fact',
+              content: stop.funFact!,
+              backgroundColor: GeezColors.accent.withValues(alpha: 0.06),
+              isDark: isDark,
+            ),
+            const SizedBox(height: GeezSpacing.md),
+          ],
+
+          // Practical details box
+          if (_hasPracticalDetails(stop))
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: isDark
+                    ? const Color(0xFF252528)
+                    : const Color(0xFFF8F8F8),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Detaylar',
+                    style: GeezTypography.bodySmall.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: isDark
+                          ? GeezColors.textPrimaryDark
+                          : GeezColors.textPrimary,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 8),
-                _DetailRow(
-                    icon: '⏱️', text: 'En iyi: ${stop.bestTime}', isDark: isDark),
-                _DetailRow(
-                    icon: '💰', text: stop.price, isDark: isDark),
-                if (stop.dresscode != null)
-                  _DetailRow(
-                      icon: '👗', text: stop.dresscode!, isDark: isDark),
-                if (stop.photoTip != null)
-                  _DetailRow(
-                      icon: '📸',
-                      text: 'Fotoğraf: ${stop.photoTip!}',
-                      isDark: isDark),
-                for (final warning in stop.warnings)
-                  _DetailRow(
-                      icon: '⚠️', text: warning, isDark: isDark,
-                      isWarning: true),
-              ],
+                  const SizedBox(height: 8),
+                  if (stop.bestTime != null)
+                    _DetailRow(
+                      icon: '⏱️',
+                      text: 'En iyi: ${stop.bestTime!}',
+                      isDark: isDark,
+                    ),
+                  if (stop.entryFeeText != null)
+                    _DetailRow(
+                      icon: '💰',
+                      text: stop.entryFeeText!,
+                      isDark: isDark,
+                    )
+                  else if (stop.entryFeeAmount != null &&
+                      stop.entryFeeAmount! > 0)
+                    _DetailRow(
+                      icon: '💰',
+                      text:
+                          '${stop.entryFeeCurrency} ${stop.entryFeeAmount!.toStringAsFixed(0)}',
+                      isDark: isDark,
+                    ),
+                  if (stop.warnings != null)
+                    _DetailRow(
+                      icon: '⚠️',
+                      text: stop.warnings!,
+                      isDark: isDark,
+                      isWarning: true,
+                    ),
+                ],
+              ),
             ),
-          ),
         ],
       ),
     );
+  }
+
+  bool _hasPracticalDetails(RouteStopModel stop) {
+    return stop.bestTime != null ||
+        stop.entryFeeText != null ||
+        (stop.entryFeeAmount != null && stop.entryFeeAmount! > 0) ||
+        stop.warnings != null;
   }
 
   String _formatCount(int count) {
@@ -330,6 +394,10 @@ class _ExpandedContent extends StatelessWidget {
     return count.toString();
   }
 }
+
+// ---------------------------------------------------------------------------
+// Reusable sub-widgets
+// ---------------------------------------------------------------------------
 
 class _InfoSection extends StatelessWidget {
   const _InfoSection({
@@ -429,14 +497,38 @@ class _DetailRow extends StatelessWidget {
   }
 }
 
+// ---------------------------------------------------------------------------
+// Travel connector between stops
+// ---------------------------------------------------------------------------
+
 class _TravelConnector extends StatelessWidget {
   const _TravelConnector({
-    required this.segment,
+    required this.durationMin,
     required this.isDark,
+    this.mode,
   });
 
-  final TravelSegment segment;
+  final int durationMin;
+  final String? mode;
   final bool isDark;
+
+  String get _icon {
+    switch (mode?.toLowerCase()) {
+      case 'transit':
+      case 'bus':
+        return '🚌';
+      case 'car':
+      case 'driving':
+        return '🚗';
+      case 'cycling':
+      case 'bike':
+        return '🚲';
+      default:
+        return '🚶';
+    }
+  }
+
+  String get _label => '$durationMin dk';
 
   @override
   Widget build(BuildContext context) {
@@ -445,7 +537,7 @@ class _TravelConnector extends StatelessWidget {
       child: Row(
         children: [
           const SizedBox(width: 30),
-          // Dotted line
+          // Dotted connector line
           Column(
             children: [
               Container(
@@ -466,13 +558,10 @@ class _TravelConnector extends StatelessWidget {
             ],
           ),
           const SizedBox(width: 12),
-          Text(
-            segment.icon,
-            style: const TextStyle(fontSize: 14),
-          ),
+          Text(_icon, style: const TextStyle(fontSize: 14)),
           const SizedBox(width: 6),
           Text(
-            segment.description,
+            _label,
             style: GeezTypography.caption.copyWith(
               color: isDark
                   ? GeezColors.textSecondaryDark

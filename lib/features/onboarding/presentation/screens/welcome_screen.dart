@@ -96,7 +96,8 @@ class _WelcomeScreenState extends State<WelcomeScreen>
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final size = MediaQuery.sizeOf(context);
-    final illustrationSize = (size.width * 0.65).clamp(180.0, size.height * 0.35);
+    final maxSize = size.height * 0.35;
+    final illustrationSize = (size.width * 0.65).clamp(120.0, maxSize < 120.0 ? 120.0 : maxSize);
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: GeezSpacing.lg),

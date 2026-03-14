@@ -1,96 +1,59 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:geez_ai/core/router/route_names.dart';
 import 'package:geez_ai/core/theme/colors.dart';
 import 'package:geez_ai/core/theme/spacing.dart';
 import 'package:geez_ai/core/theme/typography.dart';
+import 'package:geez_ai/features/chat/presentation/providers/route_generation_provider.dart';
 import 'package:geez_ai/shared/widgets/loading_indicator.dart';
 
-class RouteLoadingScreen extends StatefulWidget {
+class RouteLoadingScreen extends ConsumerStatefulWidget {
   const RouteLoadingScreen({super.key});
 
   @override
-  State<RouteLoadingScreen> createState() => _RouteLoadingScreenState();
+  ConsumerState<RouteLoadingScreen> createState() => _RouteLoadingScreenState();
 }
 
-class _RouteLoadingScreenState extends State<RouteLoadingScreen> {
-  int _currentStep = 0;
-  String _snippet = '';
-
-  final _steps = const [
-    _LoadingStep(
-      label: 'Google Maps verileri alınıyor',
-      completedLabel: 'Google Maps verileri',
-    ),
-    _LoadingStep(
-      label: '847 review okunuyor',
-      completedLabel: '847 review okundu',
-    ),
-    _LoadingStep(
-      label: 'Insider tips aranıyor...',
-      completedLabel: 'Insider tips bulundu',
-    ),
-    _LoadingStep(
-      label: 'Fun facts hazırlanıyor',
-      completedLabel: 'Fun facts hazır',
-    ),
-    _LoadingStep(
-      label: 'Rota optimize ediliyor',
-      completedLabel: 'Rota optimize edildi',
-    ),
-  ];
-
-  final _snippets = const [
-    '',
-    '',
-    'Süleymaniye\'nin gizli bahçesi hakkında ilginç bir şey buldum...',
-    'Kapalıçarşı\'da 5. kuşak bir bakırcı keşfettim!',
-    'Sana özel 6 duraklık mükemmel bir rota çıktı!',
-  ];
-
-  @override
-  void initState() {
-    super.initState();
-    _simulateProgress();
-  }
-
-  Future<void> _simulateProgress() async {
-    for (int i = 0; i < _steps.length; i++) {
-      await Future.delayed(Duration(milliseconds: i == 0 ? 600 : 700));
-      if (!mounted) return;
-      setState(() {
-        _currentStep = i + 1;
-        if (i < _snippets.length) {
-          _snippet = _snippets[i];
-        }
-      });
-    }
-
-    // Brief pause before navigating
-    await Future.delayed(const Duration(milliseconds: 500));
-    if (!mounted) return;
-    context.go('/route-detail');
-  }
+class _RouteLoadingScreenState extends ConsumerState<RouteLoadingScreen> {
+  bool _hasNavigated = false;
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final generationState = ref.watch(routeGenerationProvider);
+
+    // Navigate to route detail as soon as routeId is available.
+    if (generationState.isSuccess &&
+        generationState.routeId != null &&
+        !_hasNavigated) {
+      _hasNavigated = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          context.go(RoutePaths.routeDetailPath(generationState.routeId!));
+        }
+      });
+    }
 
     return Scaffold(
-      backgroundColor: isDark ? GeezColors.backgroundDark : GeezColors.background,
+      backgroundColor:
+          isDark ? GeezColors.backgroundDark : GeezColors.background,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
           icon: Icon(
             Icons.arrow_back_rounded,
-            color: isDark ? GeezColors.textPrimaryDark : GeezColors.textPrimary,
+            color:
+                isDark ? GeezColors.textPrimaryDark : GeezColors.textPrimary,
           ),
-          onPressed: () => context.go('/new-route'),
+          onPressed: () => context.go(RoutePaths.newRoute),
         ),
         title: Text(
-          'İstanbul Rotası',
+          'Rota Hazırlanıyor',
           style: GeezTypography.h3.copyWith(
-            color: isDark ? GeezColors.textPrimaryDark : GeezColors.textPrimary,
+            color:
+                isDark ? GeezColors.textPrimaryDark : GeezColors.textPrimary,
           ),
         ),
         centerTitle: true,
@@ -98,101 +61,239 @@ class _RouteLoadingScreenState extends State<RouteLoadingScreen> {
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: GeezSpacing.lg),
-          child: Column(
-            children: [
-              const Spacer(flex: 2),
-
-              // Loading indicator
-              const GeezLoadingIndicator(
-                size: 80,
-                message: 'Rotanı hazırlıyorum...',
-              ),
-
-              const SizedBox(height: GeezSpacing.xl),
-
-              // Progress steps
-              Container(
-                padding: const EdgeInsets.all(GeezSpacing.md),
-                decoration: BoxDecoration(
-                  color: isDark ? GeezColors.surfaceDark : GeezColors.surface,
-                  borderRadius: BorderRadius.circular(GeezRadius.card),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.06),
-                      blurRadius: 12,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
+          child: generationState.isError
+              ? _ErrorView(
+                  message: generationState.errorMessage ??
+                      'Beklenmedik bir hata oluştu.',
+                  isDark: isDark,
+                  onRetry: () {
+                    // Reset and send user back to chat to retry.
+                    ref.read(routeGenerationProvider.notifier).reset();
+                    context.go(RoutePaths.newRoute);
+                  },
+                )
+              : _LoadingView(
+                  progressMessage: generationState.progressMessage,
+                  isDark: isDark,
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: List.generate(_steps.length, (index) {
-                    return _StepRow(
-                      step: _steps[index],
-                      status: index < _currentStep
-                          ? _StepStatus.completed
-                          : index == _currentStep
-                              ? _StepStatus.inProgress
-                              : _StepStatus.pending,
-                      isDark: isDark,
-                    );
-                  }),
-                ),
-              ),
-
-              const SizedBox(height: GeezSpacing.lg),
-
-              // AI snippet
-              AnimatedSwitcher(
-                duration: const Duration(milliseconds: 300),
-                child: _snippet.isNotEmpty
-                    ? Container(
-                        key: ValueKey(_snippet),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: GeezSpacing.md,
-                          vertical: 12,
-                        ),
-                        decoration: BoxDecoration(
-                          color: GeezColors.primary.withValues(alpha: 0.08),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Row(
-                          children: [
-                            const Text('💡', style: TextStyle(fontSize: 18)),
-                            const SizedBox(width: GeezSpacing.sm),
-                            Expanded(
-                              child: Text(
-                                _snippet,
-                                style: GeezTypography.bodySmall.copyWith(
-                                  color: isDark
-                                      ? GeezColors.textPrimaryDark
-                                      : GeezColors.textPrimary,
-                                  fontStyle: FontStyle.italic,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      )
-                    : const SizedBox.shrink(),
-              ),
-
-              const Spacer(flex: 3),
-            ],
-          ),
         ),
       ),
     );
   }
 }
 
+// ---------------------------------------------------------------------------
+// Loading view
+// ---------------------------------------------------------------------------
+
+class _LoadingView extends StatelessWidget {
+  const _LoadingView({
+    required this.progressMessage,
+    required this.isDark,
+  });
+
+  final String? progressMessage;
+  final bool isDark;
+
+  static const _steps = [
+    _LoadingStep(
+      label: 'Mekanlar araştırılıyor',
+      completedLabel: 'Mekanlar araştırıldı',
+    ),
+    _LoadingStep(
+      label: 'Yorumlar analiz ediliyor',
+      completedLabel: 'Yorumlar analiz edildi',
+    ),
+    _LoadingStep(
+      label: 'Insider ipuçları ekleniyor',
+      completedLabel: 'Insider ipuçları hazır',
+    ),
+    _LoadingStep(
+      label: 'Rota optimize ediliyor',
+      completedLabel: 'Rota optimize edildi',
+    ),
+    _LoadingStep(
+      label: 'Neredeyse hazır!',
+      completedLabel: 'Rota hazır!',
+    ),
+  ];
+
+  static const _progressMessages = [
+    'Rotanız hazırlanıyor...',
+    'Mekanlar araştırılıyor...',
+    'Yorumlar analiz ediliyor...',
+    'Insider ipuçları ekleniyor...',
+    'Rota optimize ediliyor...',
+  ];
+
+  int get _currentStep {
+    if (progressMessage == null) return 0;
+    final idx = _progressMessages.indexOf(progressMessage!);
+    return idx < 0 ? 0 : idx;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final step = _currentStep;
+
+    return Column(
+      children: [
+        const Spacer(flex: 2),
+
+        // Loading indicator
+        GeezLoadingIndicator(
+          size: 80,
+          message: progressMessage ?? 'Rotanız hazırlanıyor...',
+        ),
+
+        const SizedBox(height: GeezSpacing.xl),
+
+        // Progress steps
+        Container(
+          padding: const EdgeInsets.all(GeezSpacing.md),
+          decoration: BoxDecoration(
+            color: isDark ? GeezColors.surfaceDark : GeezColors.surface,
+            borderRadius: BorderRadius.circular(GeezRadius.card),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.06),
+                blurRadius: 12,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: List.generate(_steps.length, (index) {
+              return _StepRow(
+                step: _steps[index],
+                status: index < step
+                    ? _StepStatus.completed
+                    : index == step
+                        ? _StepStatus.inProgress
+                        : _StepStatus.pending,
+                isDark: isDark,
+              );
+            }),
+          ),
+        ),
+
+        const SizedBox(height: GeezSpacing.lg),
+
+        // Live progress message bubble
+        AnimatedSwitcher(
+          duration: const Duration(milliseconds: 300),
+          child: progressMessage != null
+              ? Container(
+                  key: ValueKey(progressMessage),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: GeezSpacing.md,
+                    vertical: 12,
+                  ),
+                  decoration: BoxDecoration(
+                    color: GeezColors.primary.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    children: [
+                      const Text('💡', style: TextStyle(fontSize: 18)),
+                      const SizedBox(width: GeezSpacing.sm),
+                      Expanded(
+                        child: Text(
+                          progressMessage!,
+                          style: GeezTypography.bodySmall.copyWith(
+                            color: isDark
+                                ? GeezColors.textPrimaryDark
+                                : GeezColors.textPrimary,
+                            fontStyle: FontStyle.italic,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                )
+              : const SizedBox.shrink(),
+        ),
+
+        const Spacer(flex: 3),
+      ],
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Error view
+// ---------------------------------------------------------------------------
+
+class _ErrorView extends StatelessWidget {
+  const _ErrorView({
+    required this.message,
+    required this.isDark,
+    required this.onRetry,
+  });
+
+  final String message;
+  final bool isDark;
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Icon(
+          Icons.error_outline_rounded,
+          size: 64,
+          color: GeezColors.error,
+        ),
+        const SizedBox(height: GeezSpacing.md),
+        Text(
+          'Bir hata oluştu',
+          style: GeezTypography.h3.copyWith(
+            color: isDark ? GeezColors.textPrimaryDark : GeezColors.textPrimary,
+          ),
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: GeezSpacing.sm),
+        Text(
+          message,
+          style: GeezTypography.bodySmall.copyWith(
+            color: isDark
+                ? GeezColors.textSecondaryDark
+                : GeezColors.textSecondary,
+          ),
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: GeezSpacing.xl),
+        FilledButton.icon(
+          onPressed: onRetry,
+          style: FilledButton.styleFrom(
+            backgroundColor: GeezColors.primary,
+            foregroundColor: Colors.white,
+            padding: const EdgeInsets.symmetric(
+              horizontal: GeezSpacing.xl,
+              vertical: GeezSpacing.md,
+            ),
+          ),
+          icon: const Icon(Icons.refresh_rounded),
+          label: const Text('Tekrar Dene'),
+        ),
+      ],
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Step models & widgets
+// ---------------------------------------------------------------------------
+
 enum _StepStatus { pending, inProgress, completed }
 
 class _LoadingStep {
+  const _LoadingStep({required this.label, required this.completedLabel});
+
   final String label;
   final String completedLabel;
-
-  const _LoadingStep({required this.label, required this.completedLabel});
 }
 
 class _StepRow extends StatelessWidget {

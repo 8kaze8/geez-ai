@@ -1,22 +1,32 @@
 import 'package:flutter/material.dart';
-import '../../../../core/theme/colors.dart';
-import '../../../../core/theme/spacing.dart';
-import '../../../../core/theme/typography.dart';
-import '../../../../shared/widgets/geez_card.dart';
-import '../../domain/mock_data.dart';
+import 'package:geez_ai/core/theme/colors.dart';
+import 'package:geez_ai/core/theme/spacing.dart';
+import 'package:geez_ai/core/theme/typography.dart';
+import 'package:geez_ai/shared/widgets/geez_card.dart';
 
 class DiscoveryBar extends StatelessWidget {
   const DiscoveryBar({
     super.key,
-    required this.data,
+    required this.score,
+    required this.tier,
+    required this.nextTier,
+    required this.pointsToNext,
+    required this.progress,
   });
 
-  final MockDiscoveryScore data;
+  final int score;
+  final String tier;
+  final String nextTier;
+  final int pointsToNext;
+
+  /// Progress within current tier band, clamped 0.0 – 1.0.
+  final double progress;
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final mutedColor = isDark ? GeezColors.textSecondaryDark : GeezColors.textSecondary;
+    final mutedColor =
+        isDark ? GeezColors.textSecondaryDark : GeezColors.textSecondary;
 
     return GeezCard(
       padding: const EdgeInsets.all(GeezSpacing.md),
@@ -40,7 +50,7 @@ class DiscoveryBar extends StatelessWidget {
               ),
               const Spacer(),
               Text(
-                '${data.score}',
+                '$score',
                 style: GeezTypography.h2.copyWith(
                   color: GeezColors.primary,
                   fontWeight: FontWeight.bold,
@@ -67,7 +77,7 @@ class DiscoveryBar extends StatelessWidget {
                   ),
                   // Filled portion with gradient
                   FractionallySizedBox(
-                    widthFactor: data.progress,
+                    widthFactor: progress.clamp(0.0, 1.0),
                     child: Container(
                       decoration: const BoxDecoration(
                         gradient: LinearGradient(
@@ -96,7 +106,7 @@ class DiscoveryBar extends StatelessWidget {
                   borderRadius: BorderRadius.circular(GeezRadius.chip),
                 ),
                 child: Text(
-                  data.tier,
+                  tier,
                   style: GeezTypography.caption.copyWith(
                     color: GeezColors.primary,
                     fontWeight: FontWeight.w600,
@@ -104,7 +114,7 @@ class DiscoveryBar extends StatelessWidget {
                 ),
               ),
               Text(
-                '${data.pointsToNext} puan \u{2192} ${data.nextTier} seviye',
+                '$pointsToNext puan \u{2192} $nextTier seviye',
                 style: GeezTypography.caption.copyWith(
                   color: mutedColor,
                 ),

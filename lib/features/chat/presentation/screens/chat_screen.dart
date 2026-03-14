@@ -1,47 +1,25 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:geez_ai/core/router/route_names.dart';
 import 'package:geez_ai/core/theme/colors.dart';
 import 'package:geez_ai/core/theme/spacing.dart';
 import 'package:geez_ai/core/theme/typography.dart';
+import 'package:geez_ai/features/chat/data/chat_repository.dart';
+import 'package:geez_ai/features/chat/presentation/providers/chat_provider.dart';
+import 'package:geez_ai/features/chat/presentation/providers/route_generation_provider.dart';
 import 'package:geez_ai/features/chat/presentation/widgets/chat_bubble.dart';
 import 'package:geez_ai/features/chat/presentation/widgets/question_chips.dart';
 
-enum ChatStep { destination, style, transport, budget, loading }
-
-class _ChatMessage {
-  final String text;
-  final bool isAI;
-
-  const _ChatMessage({required this.text, this.isAI = true});
-}
-
-class ChatScreen extends StatefulWidget {
+class ChatScreen extends ConsumerStatefulWidget {
   const ChatScreen({super.key});
 
   @override
-  State<ChatScreen> createState() => _ChatScreenState();
+  ConsumerState<ChatScreen> createState() => _ChatScreenState();
 }
 
-class _ChatScreenState extends State<ChatScreen> {
-  ChatStep _currentStep = ChatStep.destination;
-  final List<_ChatMessage> _messages = [];
+class _ChatScreenState extends ConsumerState<ChatScreen> {
   final ScrollController _scrollController = ScrollController();
-  bool _showChips = false;
-
-  // User selections
-  String? _selectedCity;
-  String? _selectedStyle;
-  // ignore: unused_field — will be used when passing data to route generation
-  String? _selectedTransport;
-
-  @override
-  void initState() {
-    super.initState();
-    _addAIMessage('Merhaba! Ben Geez, senin travel buddy\'n. ✈️\n\nNereye gitmek istiyorsun?');
-    Future.delayed(const Duration(milliseconds: 500), () {
-      if (mounted) setState(() => _showChips = true);
-    });
-  }
 
   @override
   void dispose() {
@@ -49,26 +27,11 @@ class _ChatScreenState extends State<ChatScreen> {
     super.dispose();
   }
 
-  void _addAIMessage(String text) {
-    setState(() {
-      _messages.add(_ChatMessage(text: text, isAI: true));
-    });
-    _scrollToBottom();
-  }
-
-  void _addUserMessage(String text) {
-    setState(() {
-      _messages.add(_ChatMessage(text: text, isAI: false));
-      _showChips = false;
-    });
-    _scrollToBottom();
-  }
-
   void _scrollToBottom() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_scrollController.hasClients) {
         _scrollController.animateTo(
-          _scrollController.position.maxScrollExtent + 100,
+          _scrollController.position.maxScrollExtent + 120,
           duration: const Duration(milliseconds: 300),
           curve: Curves.easeOut,
         );
@@ -76,93 +39,43 @@ class _ChatScreenState extends State<ChatScreen> {
     });
   }
 
-  void _onDestinationSelected(String city) {
-    _selectedCity = city;
-    _addUserMessage(city);
-
-    Future.delayed(const Duration(milliseconds: 600), () {
-      if (!mounted) return;
-      _addAIMessage(
-        'Harika seçim! $city mükemmel bir destinasyon. 🎉\n\n'
-        'Ne tarz bir gezi istiyorsun? Tarih mi, yemek mi, yoksa beni şaşırt mı? 😄',
-      );
-      Future.delayed(const Duration(milliseconds: 400), () {
-        if (mounted) {
-          setState(() {
-            _currentStep = ChatStep.style;
-            _showChips = true;
-          });
-          _scrollToBottom();
-        }
-      });
-    });
-  }
-
-  void _onStyleSelected(String style) {
-    _selectedStyle = style;
-    _addUserMessage(style);
-
-    Future.delayed(const Duration(milliseconds: 600), () {
-      if (!mounted) return;
-      _addAIMessage(
-        '$_selectedCity\'da ${style.toLowerCase()} — çok iyi kombinasyon! 🔥\n\n'
-        'Nasıl dolaşmayı planlıyorsun?',
-      );
-      Future.delayed(const Duration(milliseconds: 400), () {
-        if (mounted) {
-          setState(() {
-            _currentStep = ChatStep.transport;
-            _showChips = true;
-          });
-          _scrollToBottom();
-        }
-      });
-    });
-  }
-
-  void _onTransportSelected(String transport) {
-    _selectedTransport = transport;
-    _addUserMessage(transport);
-
-    Future.delayed(const Duration(milliseconds: 600), () {
-      if (!mounted) return;
-      _addAIMessage(
-        'Tamam, not aldım! Son bir soru:\n\n'
-        'Bütçen ne kadar? Bu sayede sana en uygun mekanları önerebilirim. 💰',
-      );
-      Future.delayed(const Duration(milliseconds: 400), () {
-        if (mounted) {
-          setState(() {
-            _currentStep = ChatStep.budget;
-            _showChips = true;
-          });
-          _scrollToBottom();
-        }
-      });
-    });
-  }
-
-  void _onBudgetSelected(String budget) {
-    _addUserMessage(budget);
-
-    Future.delayed(const Duration(milliseconds: 600), () {
-      if (!mounted) return;
-      _addAIMessage(
-        'Mükemmel! Her şeyi anladım. 🧠\n\n'
-        '$_selectedCity\'da ${_selectedStyle?.toLowerCase()} bir rota hazırlıyorum. '
-        'Biraz bekle, sana özel bir şeyler bulacağım...',
-      );
-      Future.delayed(const Duration(milliseconds: 800), () {
-        if (mounted) {
-          context.go('/route-loading');
-        }
-      });
-    });
+  Future<void> _onGenerateRoute(
+    Map<String, dynamic> extractedParams,
+  ) async {
+    // Navigation is handled by the ref.listen block below on success.
+    await ref
+        .read(routeGenerationProvider.notifier)
+        .generate(extractedParams);
   }
 
   @override
   Widget build(BuildContext context) {
+    final chatState = ref.watch(chatProvider);
+    final generationState = ref.watch(routeGenerationProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    // Scroll every time message count changes or typing indicator appears.
+    ref.listen(chatProvider, (prev, next) {
+      if (prev?.messages.length != next.messages.length ||
+          prev?.isLoading != next.isLoading) {
+        _scrollToBottom();
+      }
+    });
+
+    // Navigate when route is successfully generated (only on transition).
+    ref.listen(routeGenerationProvider, (prev, next) {
+      if (prev?.isSuccess != true && next.isSuccess && next.routeId != null) {
+        context.go(RoutePaths.routeDetailPath(next.routeId!));
+      }
+    });
+
+    // Derive a simple title from the first user message (city).
+    final firstUserMsg = chatState.messages
+        .where((m) => m.isUser)
+        .map((m) => m.content)
+        .firstOrNull;
+    final title =
+        firstUserMsg != null ? '$firstUserMsg Rotası' : 'Yeni Rota';
 
     return Scaffold(
       backgroundColor:
@@ -171,17 +84,37 @@ class _ChatScreenState extends State<ChatScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         title: Text(
-          _selectedCity != null ? '$_selectedCity Rotası' : 'Yeni Rota',
+          title,
           style: GeezTypography.h3.copyWith(
-            color:
-                isDark ? GeezColors.textPrimaryDark : GeezColors.textPrimary,
+            color: isDark
+                ? GeezColors.textPrimaryDark
+                : GeezColors.textPrimary,
           ),
         ),
         centerTitle: true,
+        actions: [
+          if (chatState.messages.length > 1)
+            IconButton(
+              icon: Icon(
+                Icons.refresh_rounded,
+                color: isDark
+                    ? GeezColors.textSecondaryDark
+                    : GeezColors.textSecondary,
+              ),
+              tooltip: 'Yeni rota',
+              onPressed: () {
+                ref.read(chatProvider.notifier).reset();
+                ref.read(routeGenerationProvider.notifier).reset();
+                _scrollToBottom();
+              },
+            ),
+        ],
       ),
       body: Column(
         children: [
+          // ----------------------------------------------------------------
           // Chat messages
+          // ----------------------------------------------------------------
           Expanded(
             child: ListView.builder(
               controller: _scrollController,
@@ -189,92 +122,318 @@ class _ChatScreenState extends State<ChatScreen> {
                 top: GeezSpacing.sm,
                 bottom: GeezSpacing.md,
               ),
-              itemCount: _messages.length + (_showChips ? 1 : 0),
-              itemBuilder: (context, index) {
-                if (index < _messages.length) {
-                  final msg = _messages[index];
-                  return _AnimatedMessage(
-                    key: ValueKey('msg_$index'),
-                    child: ChatBubble(
-                      text: msg.text,
-                      isAI: msg.isAI,
-                    ),
-                  );
-                }
+              itemCount: _itemCount(chatState),
+              itemBuilder: (context, index) =>
+                  _buildItem(context, index, chatState, isDark),
+            ),
+          ),
 
-                // Chips at the end
-                return _buildCurrentChips();
+          // ----------------------------------------------------------------
+          // Error banner
+          // ----------------------------------------------------------------
+          if (chatState.hasError)
+            _ErrorBanner(
+              message: chatState.errorMessage!,
+              isRateLimit:
+                  chatState.errorType == ChatErrorType.rateLimitExceeded,
+              isDark: isDark,
+              onDismiss: () {
+                // Re-reading the provider clears the error on next copyWith
+                // by triggering a reset only of the error fields.
+                ref.read(chatProvider.notifier).reset();
               },
+            ),
+
+          if (generationState.isError &&
+              generationState.errorMessage != null)
+            _ErrorBanner(
+              message: generationState.errorMessage!,
+              isRateLimit: generationState.errorType ==
+                  ChatErrorType.rateLimitExceeded,
+              isDark: isDark,
+              onDismiss: () =>
+                  ref.read(routeGenerationProvider.notifier).reset(),
+            ),
+
+          // ----------------------------------------------------------------
+          // Generation loading overlay
+          // ----------------------------------------------------------------
+          if (generationState.isLoading)
+            _GenerationLoadingBar(
+              message: generationState.progressMessage ??
+                  'Rotanız hazırlanıyor...',
+              isDark: isDark,
+            ),
+        ],
+      ),
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // List building helpers
+  // ---------------------------------------------------------------------------
+
+  int _itemCount(ChatState s) {
+    var count = s.messages.length;
+    if (s.isLoading) count += 1; // typing indicator
+    if (!s.isLoading && !s.isComplete && s.suggestions.isNotEmpty) {
+      count += 1; // suggestion chips
+    }
+    if (!s.isLoading && s.isComplete) count += 1; // generate button
+    return count;
+  }
+
+  Widget _buildItem(
+    BuildContext context,
+    int index,
+    ChatState s,
+    bool isDark,
+  ) {
+    // Real messages
+    if (index < s.messages.length) {
+      return _AnimatedMessage(
+        key: ValueKey('msg_$index'),
+        child: ChatBubble(message: s.messages[index]),
+      );
+    }
+
+    final extra = index - s.messages.length;
+
+    // Typing indicator
+    if (s.isLoading && extra == 0) {
+      return _AnimatedMessage(
+        key: const ValueKey('typing'),
+        child: const ChatBubble.typing(),
+      );
+    }
+
+    // Suggestion chips (only when not loading and not complete)
+    if (!s.isLoading && !s.isComplete && s.suggestions.isNotEmpty) {
+      if (extra == 0) {
+        return _AnimatedMessage(
+          key: ValueKey('chips_${s.currentStep}'),
+          child: QuestionChips(
+            suggestions: s.suggestions,
+            onSelected: (text) =>
+                ref.read(chatProvider.notifier).selectSuggestion(text),
+            allowCustomInput: s.currentStep == 0,
+            customInputHint: 'Şehir veya ülke yaz...',
+          ),
+        );
+      }
+    }
+
+    // Generate Route button when Q&A is complete
+    if (!s.isLoading && s.isComplete) {
+      if (extra == 0) {
+        return _AnimatedMessage(
+          key: const ValueKey('generate_btn'),
+          child: _GenerateRouteButton(
+            isDark: isDark,
+            onTap: s.extractedParams != null
+                ? () => _onGenerateRoute(s.extractedParams!)
+                : null,
+          ),
+        );
+      }
+    }
+
+    return const SizedBox.shrink();
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Generate Route button
+// ---------------------------------------------------------------------------
+
+class _GenerateRouteButton extends StatelessWidget {
+  const _GenerateRouteButton({
+    required this.isDark,
+    required this.onTap,
+  });
+
+  final bool isDark;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(
+        horizontal: GeezSpacing.md,
+        vertical: GeezSpacing.sm,
+      ),
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [GeezColors.primary, Color(0xFF1565C0)],
+            ),
+            borderRadius: BorderRadius.circular(GeezRadius.button),
+            boxShadow: [
+              BoxShadow(
+                color: GeezColors.primary.withValues(alpha: 0.35),
+                blurRadius: 12,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(
+                Icons.auto_awesome_rounded,
+                color: Colors.white,
+                size: 20,
+              ),
+              const SizedBox(width: GeezSpacing.sm),
+              Text(
+                'Rotamı Oluştur',
+                style: GeezTypography.body.copyWith(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Error banner
+// ---------------------------------------------------------------------------
+
+class _ErrorBanner extends StatelessWidget {
+  const _ErrorBanner({
+    required this.message,
+    required this.isRateLimit,
+    required this.isDark,
+    required this.onDismiss,
+  });
+
+  final String message;
+  final bool isRateLimit;
+  final bool isDark;
+  final VoidCallback onDismiss;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.symmetric(
+        horizontal: GeezSpacing.md,
+        vertical: GeezSpacing.sm,
+      ),
+      padding: const EdgeInsets.all(GeezSpacing.md),
+      decoration: BoxDecoration(
+        color: isRateLimit
+            ? GeezColors.warning.withValues(alpha: 0.12)
+            : GeezColors.error.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(GeezRadius.card),
+        border: Border.all(
+          color: isRateLimit
+              ? GeezColors.warning.withValues(alpha: 0.4)
+              : GeezColors.error.withValues(alpha: 0.3),
+        ),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(
+            isRateLimit
+                ? Icons.workspace_premium_rounded
+                : Icons.error_outline_rounded,
+            color: isRateLimit ? GeezColors.warning : GeezColors.error,
+            size: 20,
+          ),
+          const SizedBox(width: GeezSpacing.sm),
+          Expanded(
+            child: Text(
+              message,
+              style: GeezTypography.bodySmall.copyWith(
+                color: isDark
+                    ? GeezColors.textPrimaryDark
+                    : GeezColors.textPrimary,
+              ),
+            ),
+          ),
+          GestureDetector(
+            onTap: onDismiss,
+            child: Icon(
+              Icons.close_rounded,
+              size: 18,
+              color: isDark
+                  ? GeezColors.textSecondaryDark
+                  : GeezColors.textSecondary,
             ),
           ),
         ],
       ),
     );
   }
+}
 
-  Widget _buildCurrentChips() {
-    return switch (_currentStep) {
-      ChatStep.destination => _buildDestinationChips(),
-      ChatStep.style => _buildStyleChips(),
-      ChatStep.transport => _buildTransportChips(),
-      ChatStep.budget => _buildBudgetChips(),
-      ChatStep.loading => const SizedBox.shrink(),
-    };
-  }
+// ---------------------------------------------------------------------------
+// Generation loading bar
+// ---------------------------------------------------------------------------
 
-  Widget _buildDestinationChips() {
-    return QuestionChips(
-      options: const [
-        ChipOption(label: 'İstanbul', emoji: '🇹🇷'),
-        ChipOption(label: 'Paris', emoji: '🇫🇷'),
-        ChipOption(label: 'Roma', emoji: '🇮🇹'),
-        ChipOption(label: 'Tokyo', emoji: '🇯🇵'),
-        ChipOption(label: 'Barcelona', emoji: '🇪🇸'),
-        ChipOption(label: 'Londra', emoji: '🇬🇧'),
-      ],
-      onSelected: _onDestinationSelected,
-      allowCustomInput: true,
-      customInputHint: 'Şehir veya ülke yaz...',
-    );
-  }
+class _GenerationLoadingBar extends StatelessWidget {
+  const _GenerationLoadingBar({
+    required this.message,
+    required this.isDark,
+  });
 
-  Widget _buildStyleChips() {
-    return QuestionChips(
-      options: const [
-        ChipOption(label: 'Tarihi keşif', emoji: '🏛️'),
-        ChipOption(label: 'Yemek turu', emoji: '🍕'),
-        ChipOption(label: 'Hidden gems', emoji: '💎'),
-        ChipOption(label: 'Karma', emoji: '🎲'),
-        ChipOption(label: 'Surprise me!', emoji: '🎁'),
-      ],
-      onSelected: _onStyleSelected,
-    );
-  }
+  final String message;
+  final bool isDark;
 
-  Widget _buildTransportChips() {
-    return QuestionChips(
-      options: const [
-        ChipOption(label: 'Yürüyerek', emoji: '🚶'),
-        ChipOption(label: 'Toplu taşıma', emoji: '🚌'),
-        ChipOption(label: 'Arabam var', emoji: '🚗'),
-        ChipOption(label: 'Taksi/Uber OK', emoji: '🚕'),
-      ],
-      onSelected: _onTransportSelected,
-    );
-  }
-
-  Widget _buildBudgetChips() {
-    return QuestionChips(
-      options: const [
-        ChipOption(label: '₺500 altı', emoji: '💸'),
-        ChipOption(label: '₺500-1000', emoji: '💰'),
-        ChipOption(label: '₺1000+', emoji: '💎'),
-        ChipOption(label: 'Farketmez', emoji: '🤷'),
-      ],
-      onSelected: _onBudgetSelected,
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(
+        horizontal: GeezSpacing.md,
+        vertical: GeezSpacing.sm,
+      ),
+      decoration: BoxDecoration(
+        color: isDark ? GeezColors.surfaceDark : GeezColors.surface,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.08),
+            blurRadius: 8,
+            offset: const Offset(0, -2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const LinearProgressIndicator(
+            valueColor:
+                AlwaysStoppedAnimation<Color>(GeezColors.primary),
+            backgroundColor: Color(0xFFE3F2FD),
+          ),
+          const SizedBox(height: GeezSpacing.sm),
+          Text(
+            message,
+            style: GeezTypography.bodySmall.copyWith(
+              color: isDark
+                  ? GeezColors.textSecondaryDark
+                  : GeezColors.textSecondary,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
+
+// ---------------------------------------------------------------------------
+// Animated message wrapper (fade + slide in)
+// ---------------------------------------------------------------------------
 
 class _AnimatedMessage extends StatefulWidget {
   const _AnimatedMessage({

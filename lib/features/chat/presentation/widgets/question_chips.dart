@@ -3,26 +3,58 @@ import 'package:geez_ai/core/theme/colors.dart';
 import 'package:geez_ai/core/theme/spacing.dart';
 import 'package:geez_ai/core/theme/typography.dart';
 
+// ---------------------------------------------------------------------------
+// Data models
+// ---------------------------------------------------------------------------
+
+/// A single chip option with an optional [emoji] prefix.
 class ChipOption {
+  const ChipOption({required this.label, this.emoji});
+
   final String label;
   final String? emoji;
 
-  const ChipOption({required this.label, this.emoji});
+  /// Build [ChipOption] list from a plain [List<String>] of provider
+  /// suggestions (no emoji).
+  static List<ChipOption> fromSuggestions(List<String> suggestions) =>
+      suggestions.map((s) => ChipOption(label: s)).toList();
 }
 
+// ---------------------------------------------------------------------------
+// Widget
+// ---------------------------------------------------------------------------
+
+/// Displays a horizontal wrap of suggestion chips below the last AI message.
+///
+/// [options] may be supplied directly (with optional emoji) **or** via
+/// [suggestions] (plain strings from the chat provider).  If both are given,
+/// [options] takes precedence.
+///
+/// Set [allowCustomInput] to `true` to show a text field where the user can
+/// type their own answer (used on the first destination step).
 class QuestionChips extends StatefulWidget {
   const QuestionChips({
     super.key,
-    required this.options,
+    List<ChipOption>? options,
+    List<String>? suggestions,
     required this.onSelected,
     this.allowCustomInput = false,
     this.customInputHint,
-  });
+  })  : assert(
+          options != null || suggestions != null,
+          'Either options or suggestions must be provided',
+        ),
+        _options = options,
+        _suggestions = suggestions;
 
-  final List<ChipOption> options;
+  final List<ChipOption>? _options;
+  final List<String>? _suggestions;
   final ValueChanged<String> onSelected;
   final bool allowCustomInput;
   final String? customInputHint;
+
+  List<ChipOption> get resolvedOptions =>
+      _options ?? ChipOption.fromSuggestions(_suggestions ?? []);
 
   @override
   State<QuestionChips> createState() => _QuestionChipsState();
@@ -67,6 +99,7 @@ class _QuestionChipsState extends State<QuestionChips>
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final options = widget.resolvedOptions;
 
     return FadeTransition(
       opacity: _fadeAnimation,
@@ -83,7 +116,7 @@ class _QuestionChipsState extends State<QuestionChips>
               Wrap(
                 spacing: GeezSpacing.sm,
                 runSpacing: GeezSpacing.sm,
-                children: widget.options.map((option) {
+                children: options.map((option) {
                   final isSelected = _selected == option.label;
                   final displayLabel = option.emoji != null
                       ? '${option.emoji} ${option.label}'
@@ -113,7 +146,8 @@ class _QuestionChipsState extends State<QuestionChips>
                                 : (isDark
                                     ? const Color(0xFF2A2A2E)
                                     : Colors.white),
-                        borderRadius: BorderRadius.circular(GeezRadius.chip),
+                        borderRadius:
+                            BorderRadius.circular(GeezRadius.chip),
                         border: Border.all(
                           color: isSelected
                               ? GeezColors.primary
@@ -121,7 +155,8 @@ class _QuestionChipsState extends State<QuestionChips>
                                   ? (isDark
                                       ? const Color(0xFF3A3A3E)
                                       : const Color(0xFFE0E0E0))
-                                  : GeezColors.primary.withValues(alpha: 0.4),
+                                  : GeezColors.primary
+                                      .withValues(alpha: 0.4),
                           width: 1.5,
                         ),
                       ),
@@ -137,8 +172,9 @@ class _QuestionChipsState extends State<QuestionChips>
                                   : (isDark
                                       ? GeezColors.textPrimaryDark
                                       : GeezColors.textPrimary),
-                          fontWeight:
-                              isSelected ? FontWeight.w600 : FontWeight.w500,
+                          fontWeight: isSelected
+                              ? FontWeight.w600
+                              : FontWeight.w500,
                         ),
                       ),
                     ),
@@ -162,7 +198,8 @@ class _QuestionChipsState extends State<QuestionChips>
         color: isDark ? const Color(0xFF2A2A2E) : Colors.white,
         borderRadius: BorderRadius.circular(GeezRadius.chip),
         border: Border.all(
-          color: isDark ? const Color(0xFF3A3A3E) : const Color(0xFFE0E0E0),
+          color:
+              isDark ? const Color(0xFF3A3A3E) : const Color(0xFFE0E0E0),
           width: 1.5,
         ),
       ),
