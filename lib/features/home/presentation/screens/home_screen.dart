@@ -464,7 +464,11 @@ class _Header extends StatelessWidget {
           icon: Icons.notifications_outlined,
           isDark: isDark,
           badgeCount: 0,
-          onTap: () {},
+          onTap: () {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Bildirimler yakında!')),
+            );
+          },
         ),
         const SizedBox(width: GeezSpacing.sm),
 
@@ -472,7 +476,11 @@ class _Header extends StatelessWidget {
         _IconButton(
           icon: Icons.settings_outlined,
           isDark: isDark,
-          onTap: () {},
+          onTap: () {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Ayarlar yakında!')),
+            );
+          },
         ),
       ],
     );

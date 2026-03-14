@@ -56,9 +56,8 @@ class _FeedbackScreenState extends ConsumerState<FeedbackScreen> {
     ref.listen<FeedbackFormState>(feedbackFormProvider, (prev, next) {
       if (prev?.isSubmitted == true || !next.isSubmitted) return;
       Future.delayed(const Duration(milliseconds: 2200), () {
-        if (mounted) {
-          context.go(RoutePaths.home);
-        }
+        if (!context.mounted) return;
+        context.go(RoutePaths.home);
       });
     });
 
