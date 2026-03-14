@@ -2,12 +2,29 @@ import 'package:flutter/material.dart';
 import 'package:geez_ai/core/theme/colors.dart';
 import 'package:geez_ai/core/theme/spacing.dart';
 import 'package:geez_ai/core/theme/typography.dart';
-import 'package:geez_ai/features/passport/domain/mock_passport_data.dart';
+
+// ---------------------------------------------------------------------------
+// PersonaCategory — value class representing a single persona dimension.
+// ---------------------------------------------------------------------------
+
+class PersonaCategory {
+  const PersonaCategory({
+    required this.emoji,
+    required this.name,
+    required this.level,
+    required this.progress,
+    required this.color,
+  });
+
+  final String emoji;
+  final String name;
+  final int level;
+  final double progress;
+  final Color color;
+}
 
 // ---------------------------------------------------------------------------
 // PersonaBar — animates a single persona-level bar.
-//
-// Accepts either a [PersonaCategory] (legacy mock) or raw fields.
 // ---------------------------------------------------------------------------
 
 class PersonaBar extends StatefulWidget {

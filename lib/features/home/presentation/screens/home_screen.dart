@@ -10,6 +10,7 @@ import 'package:geez_ai/features/home/presentation/widgets/active_route_card.dar
 import 'package:geez_ai/features/home/presentation/widgets/discovery_bar.dart';
 import 'package:geez_ai/features/home/presentation/widgets/suggestion_card.dart';
 import 'package:geez_ai/features/route/domain/route_model.dart';
+import 'package:geez_ai/shared/widgets/email_confirm_banner.dart';
 import 'package:geez_ai/shared/widgets/geez_button.dart';
 import 'package:geez_ai/shared/widgets/geez_card.dart';
 
@@ -25,13 +26,21 @@ class HomeScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: bgColor,
       body: SafeArea(
-        child: ref.watch(homeProvider).when(
-              loading: () => const _HomeLoadingState(),
-              error: (error, _) => _HomeErrorState(
-                onRetry: () => ref.read(homeProvider.notifier).refresh(),
-              ),
-              data: (data) => _HomeContent(data: data, isDark: isDark),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const EmailConfirmBanner(),
+            Expanded(
+              child: ref.watch(homeProvider).when(
+                    loading: () => const _HomeLoadingState(),
+                    error: (error, _) => _HomeErrorState(
+                      onRetry: () => ref.read(homeProvider.notifier).refresh(),
+                    ),
+                    data: (data) => _HomeContent(data: data, isDark: isDark),
+                  ),
             ),
+          ],
+        ),
       ),
     );
   }
