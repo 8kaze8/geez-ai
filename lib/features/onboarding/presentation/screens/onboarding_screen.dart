@@ -1,22 +1,22 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geez_ai/core/theme/colors.dart';
 import 'package:geez_ai/core/theme/spacing.dart';
-import 'package:geez_ai/features/onboarding/domain/onboarding_state.dart';
+import 'package:geez_ai/features/onboarding/presentation/providers/onboarding_provider.dart';
 import 'package:geez_ai/features/onboarding/presentation/screens/welcome_screen.dart';
 import 'package:geez_ai/features/onboarding/presentation/screens/quiz_screen.dart';
 import 'package:geez_ai/features/onboarding/presentation/screens/persona_reveal_screen.dart';
 
-class OnboardingScreen extends StatefulWidget {
+class OnboardingScreen extends ConsumerStatefulWidget {
   const OnboardingScreen({super.key});
 
   @override
-  State<OnboardingScreen> createState() => _OnboardingScreenState();
+  ConsumerState<OnboardingScreen> createState() => _OnboardingScreenState();
 }
 
-class _OnboardingScreenState extends State<OnboardingScreen> {
+class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   final PageController _pageController = PageController();
   int _currentPage = 0;
-  OnboardingState _state = const OnboardingState();
 
   void _goToPage(int page) {
     _pageController.animateToPage(
@@ -41,6 +41,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final (quizState, _) = ref.watch(onboardingProvider);
 
     return Scaffold(
       backgroundColor:
@@ -70,15 +71,13 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     onContinue: _nextPage,
                   ),
                   QuizScreen(
-                    state: _state,
+                    state: quizState,
                     onStateChanged: (newState) {
-                      setState(() => _state = newState);
+                      ref.read(onboardingProvider.notifier).updateState(newState);
                     },
                     onContinue: _nextPage,
                   ),
-                  PersonaRevealScreen(
-                    state: _state,
-                  ),
+                  const PersonaRevealScreen(),
                 ],
               ),
             ),

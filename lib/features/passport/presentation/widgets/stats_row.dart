@@ -2,28 +2,50 @@ import 'package:flutter/material.dart';
 import '../../../../core/theme/colors.dart';
 import '../../../../core/theme/spacing.dart';
 import '../../../../core/theme/typography.dart';
-import '../../domain/mock_passport_data.dart';
+import '../providers/passport_provider.dart';
 
+/// Displays five passport stat items (cities, countries, stops, etc.)
+/// from a [PassportStats] value object.
 class StatsRow extends StatelessWidget {
   const StatsRow({super.key, required this.stats});
 
-  final List<PassportStat> stats;
+  final PassportStats stats;
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
+    final items = [
+      _StatData(icon: Icons.location_city, value: '${stats.cityCount}', label: 'Sehir'),
+      _StatData(icon: Icons.flag, value: '${stats.countryCount}', label: 'Ulke'),
+      _StatData(icon: Icons.place, value: '${stats.totalStops}', label: 'Durak'),
+    ];
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceAround,
-      children: stats.map((stat) => _StatItem(stat: stat, isDark: isDark)).toList(),
+      children: items
+          .map((item) => _StatItem(data: item, isDark: isDark))
+          .toList(),
     );
   }
 }
 
-class _StatItem extends StatelessWidget {
-  const _StatItem({required this.stat, required this.isDark});
+class _StatData {
+  const _StatData({
+    required this.icon,
+    required this.value,
+    required this.label,
+  });
 
-  final PassportStat stat;
+  final IconData icon;
+  final String value;
+  final String label;
+}
+
+class _StatItem extends StatelessWidget {
+  const _StatItem({required this.data, required this.isDark});
+
+  final _StatData data;
   final bool isDark;
 
   @override
@@ -32,20 +54,20 @@ class _StatItem extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         Icon(
-          stat.icon,
+          data.icon,
           size: 20,
           color: GeezColors.primary,
         ),
         const SizedBox(height: GeezSpacing.xs),
         Text(
-          stat.value,
+          data.value,
           style: GeezTypography.h3.copyWith(
             fontSize: 18,
             color: isDark ? GeezColors.textPrimaryDark : GeezColors.textPrimary,
           ),
         ),
         Text(
-          stat.label,
+          data.label,
           style: GeezTypography.caption.copyWith(
             color: GeezColors.textSecondary,
           ),

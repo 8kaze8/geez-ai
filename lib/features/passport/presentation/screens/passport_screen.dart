@@ -1,72 +1,149 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/colors.dart';
 import '../../../../core/theme/spacing.dart';
 import '../../../../core/theme/typography.dart';
 import '../../../../shared/widgets/geez_button.dart';
 import '../../../../shared/widgets/geez_card.dart';
-import '../../domain/mock_passport_data.dart';
+import '../providers/passport_provider.dart';
+import '../widgets/collection_card.dart';
 import '../widgets/stamp_card.dart';
 import '../widgets/stats_row.dart';
-import '../widgets/collection_card.dart';
 
-class PassportScreen extends StatelessWidget {
+// ---------------------------------------------------------------------------
+// Static collection definitions (data-backed in a future sprint)
+// ---------------------------------------------------------------------------
+
+final _staticCollections = [
+  const CollectionEntry(
+    icon: '\u{1F3DB}',
+    title: 'Antik Dunya',
+    current: 0,
+    total: 7,
+    color: GeezColors.history,
+    comingSoon: true,
+  ),
+  const CollectionEntry(
+    icon: '\u{1F355}',
+    title: 'Food Capital',
+    current: 0,
+    total: 5,
+    color: GeezColors.foodie,
+    comingSoon: true,
+  ),
+  const CollectionEntry(
+    icon: '\u{1F3D6}',
+    title: 'Akdeniz',
+    current: 0,
+    total: 8,
+    color: GeezColors.primary,
+    comingSoon: true,
+  ),
+];
+
+// ---------------------------------------------------------------------------
+// PassportScreen
+// ---------------------------------------------------------------------------
+
+class PassportScreen extends ConsumerWidget {
   const PassportScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final asyncState = ref.watch(passportProvider);
+
+    return Scaffold(
+      body: SafeArea(
+        child: asyncState.when(
+          loading: () => const _PassportShimmer(),
+          error: (error, _) => _PassportError(
+            message: error.toString(),
+            onRetry: () => ref.invalidate(passportProvider),
+          ),
+          data: (state) => state.isEmpty
+              ? _PassportEmpty(
+                  onCreateRoute: () {
+                    // Navigate to chat/route creation — handled by router
+                    // This is a placeholder until GoRouter integration is wired.
+                  },
+                )
+              : _PassportContent(state: state),
+        ),
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Content (stamps exist)
+// ---------------------------------------------------------------------------
+
+class _PassportContent extends ConsumerWidget {
+  const _PassportContent({required this.state});
+
+  final PassportState state;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final textColor =
         isDark ? GeezColors.textPrimaryDark : GeezColors.textPrimary;
 
-    return Scaffold(
-      body: SafeArea(
-        child: SingleChildScrollView(
-          physics: const BouncingScrollPhysics(),
-          padding: const EdgeInsets.symmetric(
-            horizontal: GeezSpacing.md,
-            vertical: GeezSpacing.lg,
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Header
-              _buildHeader(textColor),
-              const SizedBox(height: GeezSpacing.lg),
+    return RefreshIndicator(
+      color: GeezColors.primary,
+      onRefresh: () => ref.read(passportProvider.notifier).refresh(),
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.symmetric(
+          horizontal: GeezSpacing.md,
+          vertical: GeezSpacing.lg,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header
+            _buildHeader(textColor),
+            const SizedBox(height: GeezSpacing.lg),
 
-              // Passport Cover
-              _buildPassportCover(context, isDark, textColor),
-              const SizedBox(height: GeezSpacing.lg),
+            // Passport Cover
+            _buildPassportCover(context, isDark, textColor),
+            const SizedBox(height: GeezSpacing.lg),
 
-              // Stamps Section
-              _buildSectionTitle('Damgalarim', isDark),
+            // Stamps Section
+            _buildSectionTitle('Damgalarim', isDark),
+            const SizedBox(height: GeezSpacing.md),
+            _buildStampGrid(),
+            const SizedBox(height: GeezSpacing.lg),
+
+            // Statistics Section
+            _buildSectionTitle('Istatistikler', isDark),
+            const SizedBox(height: GeezSpacing.md),
+            _buildStatsCard(isDark),
+            const SizedBox(height: GeezSpacing.lg),
+
+            // Persona Bars Section
+            if (state.personaLevels.isNotEmpty) ...[
+              _buildSectionTitle('Seyahat Tarzin', isDark),
               const SizedBox(height: GeezSpacing.md),
-              _buildStampGrid(),
-              const SizedBox(height: GeezSpacing.lg),
-
-              // Statistics Section
-              _buildSectionTitle('Istatistikler', isDark),
-              const SizedBox(height: GeezSpacing.md),
-              _buildStatsCard(isDark),
-              const SizedBox(height: GeezSpacing.lg),
-
-              // Collections Section
-              _buildSectionTitle('Koleksiyonlar', isDark),
-              const SizedBox(height: GeezSpacing.md),
-              _buildCollections(),
-              const SizedBox(height: GeezSpacing.lg),
-
-              // Share Button
-              Center(
-                child: GeezButton(
-                  label: 'Pasaportumu Paylas',
-                  onTap: () {},
-                  icon: Icons.share,
-                  width: double.infinity,
-                ),
-              ),
+              _buildPersonaBars(isDark),
               const SizedBox(height: GeezSpacing.lg),
             ],
-          ),
+
+            // Collections Section
+            _buildSectionTitle('Koleksiyonlar', isDark),
+            const SizedBox(height: GeezSpacing.md),
+            _buildCollections(),
+            const SizedBox(height: GeezSpacing.lg),
+
+            // Share Button
+            GeezButton(
+              label: 'Pasaportumu Paylas',
+              onTap: () {},
+              icon: Icons.share,
+              width: double.infinity,
+            ),
+            const SizedBox(height: GeezSpacing.lg),
+          ],
         ),
       ),
     );
@@ -111,7 +188,6 @@ class PassportScreen extends StatelessWidget {
         ),
         child: Column(
           children: [
-            // Passport emblem
             Container(
               width: 64,
               height: 64,
@@ -147,7 +223,6 @@ class PassportScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: GeezSpacing.md),
-            // Divider line
             Container(
               width: 120,
               height: 1,
@@ -155,7 +230,7 @@ class PassportScreen extends StatelessWidget {
             ),
             const SizedBox(height: GeezSpacing.md),
             Text(
-              'Kaze',
+              state.displayName,
               style: GeezTypography.h3.copyWith(
                 color: textColor,
                 fontWeight: FontWeight.w600,
@@ -163,7 +238,7 @@ class PassportScreen extends StatelessWidget {
             ),
             const SizedBox(height: GeezSpacing.xs),
             Text(
-              'Adventurous Foodie',
+              state.personaTitle,
               style: GeezTypography.bodySmall.copyWith(
                 color: GeezColors.secondary,
                 fontWeight: FontWeight.w500,
@@ -190,7 +265,9 @@ class PassportScreen extends StatelessWidget {
         Text(
           title,
           style: GeezTypography.h3.copyWith(
-            color: isDark ? GeezColors.textPrimaryDark : GeezColors.textPrimary,
+            color: isDark
+                ? GeezColors.textPrimaryDark
+                : GeezColors.textPrimary,
           ),
         ),
       ],
@@ -198,6 +275,13 @@ class PassportScreen extends StatelessWidget {
   }
 
   Widget _buildStampGrid() {
+    // Show real stamps + locked slots to always fill a multiple of 3.
+    const minSlots = 6;
+    final stampCount = state.stamps.length;
+    final lockedCount =
+        (stampCount < minSlots ? minSlots - stampCount : 0);
+    final totalItems = stampCount + lockedCount;
+
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
@@ -207,9 +291,12 @@ class PassportScreen extends StatelessWidget {
         mainAxisSpacing: GeezSpacing.sm,
         childAspectRatio: 0.85,
       ),
-      itemCount: MockPassportData.stamps.length,
+      itemCount: totalItems,
       itemBuilder: (context, index) {
-        return StampCard(stamp: MockPassportData.stamps[index]);
+        if (index < stampCount) {
+          return StampCard(stamp: state.stamps[index]);
+        }
+        return const StampCard.locked();
       },
     );
   }
@@ -219,14 +306,14 @@ class PassportScreen extends StatelessWidget {
       elevation: 1,
       child: Column(
         children: [
-          StatsRow(stats: MockPassportData.stats),
+          StatsRow(stats: state.stats),
           const SizedBox(height: GeezSpacing.lg),
           // Goal progress
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                MockPassportData.goalLabel,
+                state.goalLabel,
                 style: GeezTypography.bodySmall.copyWith(
                   fontWeight: FontWeight.w600,
                   color: isDark
@@ -235,7 +322,7 @@ class PassportScreen extends StatelessWidget {
                 ),
               ),
               Text(
-                '${(MockPassportData.goalProgress * 100).toInt()}%',
+                '${(state.goalProgress * 100).toInt()}%',
                 style: GeezTypography.bodySmall.copyWith(
                   fontWeight: FontWeight.w700,
                   color: GeezColors.primary,
@@ -247,7 +334,7 @@ class PassportScreen extends StatelessWidget {
           ClipRRect(
             borderRadius: BorderRadius.circular(4),
             child: LinearProgressIndicator(
-              value: MockPassportData.goalProgress,
+              value: state.goalProgress,
               backgroundColor: GeezColors.primary.withValues(alpha: 0.1),
               valueColor:
                   const AlwaysStoppedAnimation<Color>(GeezColors.primary),
@@ -259,11 +346,266 @@ class PassportScreen extends StatelessWidget {
     );
   }
 
+  Widget _buildPersonaBars(bool isDark) {
+    return GeezCard(
+      elevation: 1,
+      child: Column(
+        children: state.personaLevels
+            .map((level) => _PersonaBar(level: level, isDark: isDark))
+            .toList(),
+      ),
+    );
+  }
+
   Widget _buildCollections() {
     return Column(
-      children: MockPassportData.collections
+      children: _staticCollections
           .map((c) => CollectionCard(collection: c))
           .toList(),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Persona bar row
+// ---------------------------------------------------------------------------
+
+class _PersonaBar extends StatelessWidget {
+  const _PersonaBar({required this.level, required this.isDark});
+
+  final PersonaLevel level;
+  final bool isDark;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: GeezSpacing.md),
+      child: Row(
+        children: [
+          Text(level.emoji, style: const TextStyle(fontSize: 18)),
+          const SizedBox(width: GeezSpacing.sm),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      level.name,
+                      style: GeezTypography.bodySmall.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: isDark
+                            ? GeezColors.textPrimaryDark
+                            : GeezColors.textPrimary,
+                      ),
+                    ),
+                    Text(
+                      'Lv ${level.level}',
+                      style: GeezTypography.caption.copyWith(
+                        color: level.color,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(4),
+                  child: LinearProgressIndicator(
+                    value: level.progress,
+                    backgroundColor: level.color.withValues(alpha: 0.12),
+                    valueColor: AlwaysStoppedAnimation<Color>(level.color),
+                    minHeight: 6,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Loading shimmer
+// ---------------------------------------------------------------------------
+
+class _PassportShimmer extends StatelessWidget {
+  const _PassportShimmer();
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final baseColor =
+        isDark ? Colors.grey[800]! : Colors.grey[200]!;
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.symmetric(
+        horizontal: GeezSpacing.md,
+        vertical: GeezSpacing.lg,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header shimmer
+          Center(child: _ShimmerBox(width: 200, height: 32, color: baseColor)),
+          const SizedBox(height: GeezSpacing.lg),
+          // Cover shimmer
+          _ShimmerBox(width: double.infinity, height: 220, color: baseColor),
+          const SizedBox(height: GeezSpacing.lg),
+          _ShimmerBox(width: 120, height: 20, color: baseColor),
+          const SizedBox(height: GeezSpacing.md),
+          // Stamp grid shimmer
+          GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 3,
+              crossAxisSpacing: GeezSpacing.sm,
+              mainAxisSpacing: GeezSpacing.sm,
+              childAspectRatio: 0.85,
+            ),
+            itemCount: 6,
+            itemBuilder: (_, _) =>
+                _ShimmerBox(width: double.infinity, height: double.infinity, color: baseColor),
+          ),
+          const SizedBox(height: GeezSpacing.lg),
+          _ShimmerBox(width: double.infinity, height: 100, color: baseColor),
+        ],
+      ),
+    );
+  }
+}
+
+class _ShimmerBox extends StatelessWidget {
+  const _ShimmerBox({
+    required this.width,
+    required this.height,
+    required this.color,
+  });
+
+  final double width;
+  final double height;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: width,
+      height: height,
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.circular(GeezRadius.card),
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Error state
+// ---------------------------------------------------------------------------
+
+class _PassportError extends StatelessWidget {
+  const _PassportError({required this.message, required this.onRetry});
+
+  final String message;
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textColor =
+        isDark ? GeezColors.textPrimaryDark : GeezColors.textPrimary;
+
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(GeezSpacing.xl),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.cloud_off_rounded,
+              size: 64,
+              color: GeezColors.error.withValues(alpha: 0.6),
+            ),
+            const SizedBox(height: GeezSpacing.md),
+            Text(
+              'Bir hata olustu',
+              style: GeezTypography.h3.copyWith(color: textColor),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: GeezSpacing.sm),
+            Text(
+              'Pasaport verisi yuklenemedi. Lutfen tekrar deneyin.',
+              style: GeezTypography.bodySmall.copyWith(
+                color: GeezColors.textSecondary,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: GeezSpacing.lg),
+            GeezButton(
+              label: 'Tekrar Dene',
+              onTap: onRetry,
+              icon: Icons.refresh,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Empty state (no trips yet)
+// ---------------------------------------------------------------------------
+
+class _PassportEmpty extends StatelessWidget {
+  const _PassportEmpty({required this.onCreateRoute});
+
+  final VoidCallback onCreateRoute;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textColor =
+        isDark ? GeezColors.textPrimaryDark : GeezColors.textPrimary;
+
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(GeezSpacing.xl),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              '\u{1F6C2}',
+              style: TextStyle(fontSize: 72),
+            ),
+            const SizedBox(height: GeezSpacing.lg),
+            Text(
+              'Pasaportunuz Bos',
+              style: GeezTypography.h2.copyWith(color: textColor),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: GeezSpacing.sm),
+            Text(
+              'Henuz bir gezi yapmadiniz!\nIlk rotanizi olusturun ve damganizi kazanin.',
+              style: GeezTypography.bodySmall.copyWith(
+                color: GeezColors.textSecondary,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: GeezSpacing.xl),
+            GeezButton(
+              label: 'Ilk Rotami Olustur',
+              onTap: onCreateRoute,
+              icon: Icons.explore,
+              width: double.infinity,
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

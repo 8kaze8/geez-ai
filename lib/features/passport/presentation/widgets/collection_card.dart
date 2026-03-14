@@ -2,12 +2,39 @@ import 'package:flutter/material.dart';
 import '../../../../core/theme/colors.dart';
 import '../../../../core/theme/spacing.dart';
 import '../../../../core/theme/typography.dart';
-import '../../domain/mock_passport_data.dart';
 
+/// A self-contained data class for a collection card entry.
+///
+/// Collections are not yet backed by real Supabase data — they use static
+/// definitions with a "Yakinda" badge until the backend supports them.
+class CollectionEntry {
+  const CollectionEntry({
+    required this.icon,
+    required this.title,
+    required this.current,
+    required this.total,
+    required this.color,
+    this.comingSoon = false,
+  });
+
+  final String icon;
+  final String title;
+  final int current;
+  final int total;
+  final Color color;
+  final bool comingSoon;
+
+  double get progress => total > 0 ? current / total : 0.0;
+}
+
+/// Card that displays a single collection with a progress bar.
+///
+/// When [collection.comingSoon] is true a "Yakinda" badge is shown and the
+/// progress bar is replaced with a placeholder.
 class CollectionCard extends StatelessWidget {
   const CollectionCard({super.key, required this.collection});
 
-  final PassportCollection collection;
+  final CollectionEntry collection;
 
   @override
   Widget build(BuildContext context) {
@@ -30,7 +57,7 @@ class CollectionCard extends StatelessWidget {
       ),
       child: Row(
         children: [
-          // Icon
+          // Icon badge
           Container(
             width: 44,
             height: 44,
@@ -45,7 +72,7 @@ class CollectionCard extends StatelessWidget {
             ),
           ),
           const SizedBox(width: GeezSpacing.md),
-          // Title + Progress
+          // Title + progress
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -62,30 +89,68 @@ class CollectionCard extends StatelessWidget {
                             : GeezColors.textPrimary,
                       ),
                     ),
-                    Text(
-                      '${collection.current}/${collection.total}',
-                      style: GeezTypography.caption.copyWith(
-                        fontWeight: FontWeight.w600,
-                        color: collection.color,
+                    if (collection.comingSoon)
+                      const _YakindaBadge()
+                    else
+                      Text(
+                        '${collection.current}/${collection.total}',
+                        style: GeezTypography.caption.copyWith(
+                          fontWeight: FontWeight.w600,
+                          color: collection.color,
+                        ),
                       ),
-                    ),
                   ],
                 ),
                 const SizedBox(height: GeezSpacing.sm),
-                // Progress bar
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(4),
-                  child: LinearProgressIndicator(
-                    value: collection.progress,
-                    backgroundColor: collection.color.withValues(alpha: 0.12),
-                    valueColor: AlwaysStoppedAnimation<Color>(collection.color),
-                    minHeight: 6,
+                if (collection.comingSoon)
+                  Container(
+                    height: 6,
+                    decoration: BoxDecoration(
+                      color: Colors.grey.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                  )
+                else
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(4),
+                    child: LinearProgressIndicator(
+                      value: collection.progress,
+                      backgroundColor:
+                          collection.color.withValues(alpha: 0.12),
+                      valueColor:
+                          AlwaysStoppedAnimation<Color>(collection.color),
+                      minHeight: 6,
+                    ),
                   ),
-                ),
               ],
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _YakindaBadge extends StatelessWidget {
+  const _YakindaBadge();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: GeezSpacing.sm,
+        vertical: 2,
+      ),
+      decoration: BoxDecoration(
+        color: GeezColors.secondary.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(GeezRadius.chip),
+      ),
+      child: Text(
+        'Yakinda',
+        style: GeezTypography.caption.copyWith(
+          color: GeezColors.secondary,
+          fontWeight: FontWeight.w600,
+        ),
       ),
     );
   }
