@@ -166,7 +166,7 @@ class ChatRepository {
 
   void _assertSuccess(FunctionResponse response) {
     final status = response.status;
-    if (status == 200) return;
+    if (status == 200 || status == 201) return;
 
     if (status == 429) {
       throw const ChatException(

@@ -282,13 +282,14 @@ export async function getCacheStats(
       return await getCacheStatsJs(serviceClient);
     }
 
-    // RPC returns a single row: { total_entries, hit_rate, avg_hit_count }
-    const row = data as {
+    // RPC RETURNS TABLE → supabase-js returns an array, not a single object.
+    const rows = data as Array<{
       total_entries: number;
       hit_rate: number;
       avg_hit_count: number;
-    } | null;
+    }> | null;
 
+    const row = rows?.[0];
     if (!row) return zero;
 
     return {

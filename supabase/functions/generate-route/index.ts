@@ -335,15 +335,24 @@ async function saveRouteToDb(
       day_number: stop.dayNumber,
       stop_order: stop.stopOrder,
       place_name: stop.placeName,
+      place_id: stop.placeId ?? null,
+      latitude: stop.latitude ?? null,
+      longitude: stop.longitude ?? null,
       category: stop.category,
       description: stop.description ?? null,
       insider_tip: stop.insiderTip ?? null,
       fun_fact: stop.funFact ?? null,
       best_time: stop.bestTime ?? null,
       warnings: stop.warnings ?? null,
+      google_rating: stop.googleRating ?? null,
+      review_count: stop.reviewCount ?? null,
+      review_summary: stop.reviewSummary ?? null,
       estimated_duration_min: stop.estimatedDurationMin ?? null,
       entry_fee_text: stop.entryFee ?? null,
+      entry_fee_amount: stop.entryFeeAmount ?? null,
+      entry_fee_currency: stop.entryFeeCurrency ?? null,
       travel_from_previous_min: stop.travelFromPreviousMin ?? null,
+      travel_mode_from_previous: stop.travelModeFromPrevious ?? null,
       suggested_start_time: stop.suggestedStartTime ?? null,
       suggested_end_time: stop.suggestedEndTime ?? null,
       discovery_points: stop.discoveryPoints ?? 10,
@@ -524,7 +533,7 @@ Deno.serve(
     );
 
     return new Response(JSON.stringify(fullResponse), {
-      status: 201,
+      status: 200,
       headers: {
         ...corsHeaders(origin),
         "Content-Type": "application/json",

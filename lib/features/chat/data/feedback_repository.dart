@@ -27,10 +27,11 @@ class FeedbackRepository extends BaseRepository {
   /// and re-submit corrections — both cases should result in a single row.
   Future<void> submitFeedback(TripFeedbackModel feedback) async {
     try {
+      final json = feedback.toJson()..remove('id');
       await client
           .from('trip_feedback')
           .upsert(
-            feedback.toJson(),
+            json,
             onConflict: 'user_id,route_id',
           );
     } catch (e) {
