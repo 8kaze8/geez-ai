@@ -10,11 +10,13 @@
  *   3. Monthly rate-limit check (free: 3/mo, premium: unlimited)
  *   4. Request body parsing + validation
  *   5. Cache lookup (city:style:budget:transport:language)
- *   6. AI route generation via the model router (fallback chain)
- *   7. Persist route + stops to the database
- *   8. Write cache entry (fire-and-forget)
- *   9. Increment usage counter
- *  10. Return the RouteResponse to the client
+ *   6. (cache hit path: persist + return)
+ *   7. Fetch user context for personalization (non-blocking on failure)
+ *   8. AI route generation via the model router (fallback chain)
+ *   9. Persist route + stops to the database
+ *  10. Write cache entry (fire-and-forget)
+ *  11. Increment usage counter
+ *  12. Return the RouteResponse to the client
  *
  * All errors are caught by withErrorHandler and serialised into the
  * canonical { error: { code, message, details? } } envelope.
@@ -41,9 +43,11 @@ import type {
   DayPlan,
   StopData,
   AiProvider,
+  UserContext,
 } from "../_shared/types.ts";
 import type { LLMResponse } from "../_shared/model-router.ts";
 import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { fetchUserContext } from "../_shared/user-context.ts";
 
 import { validateRouteRequest } from "./validator.ts";
 import { buildSystemPrompt, buildRoutePrompt } from "./prompts.ts";
@@ -130,15 +134,17 @@ interface LLMRouteOutput {
  * Calls the LLM via the model router and parses the structured JSON
  * response into a RouteResponse.
  *
- * @param request - The validated RouteRequest.
+ * @param request     - The validated RouteRequest.
+ * @param userContext - Optional UserContext for prompt personalization.
  * @returns A fully-formed RouteResponse (without routeId -- that comes from DB).
  */
 async function generateRouteWithAI(
-  request: RouteRequest
+  request: RouteRequest,
+  userContext?: UserContext | null
 ): Promise<{ response: Omit<RouteResponse, "routeId" | "createdAt">; llmResponse: LLMResponse }> {
-  // 1. Build prompts
+  // 1. Build prompts (with optional personalization context)
   const systemPrompt = buildSystemPrompt();
-  const userPrompt = buildRoutePrompt(request);
+  const userPrompt = buildRoutePrompt(request, userContext);
 
   // 2. Call LLM via model router (with fallback chain)
   const llmResponse = await routeToModel({
@@ -532,15 +538,43 @@ Deno.serve(
     }
 
     // -----------------------------------------------------------------------
-    // 7. AI route generation
+    // 7. Fetch user context for personalization (non-blocking on failure)
+    // -----------------------------------------------------------------------
+    let userContext: UserContext | null = null;
+    try {
+      const ctxStart = Date.now();
+      userContext = await fetchUserContext(serviceClient, userId);
+      const ctxMs = Date.now() - ctxStart;
+      console.info(
+        `[generate-route] User context fetched in ${ctxMs}ms ` +
+          `pace=${userContext.pacePreference} ` +
+          `strongPrefs=[${userContext.strongPreferences.join(",")}] ` +
+          `visited=${userContext.visitedPlaces.length}`
+      );
+    } catch (ctxErr) {
+      // User context is a personalization enhancement -- if it fails,
+      // we continue with unpersonalized route generation rather than
+      // blocking the entire request.
+      console.warn(
+        "[generate-route] Failed to fetch user context (non-fatal):",
+        ctxErr
+      );
+    }
+
+    // -----------------------------------------------------------------------
+    // 8. AI route generation
     // -----------------------------------------------------------------------
     console.info(
       `[generate-route] Generating route for user=${userId} city=${body.city} ` +
-        `style=${body.travelStyle} days=${body.durationDays}`
+        `style=${body.travelStyle} days=${body.durationDays} ` +
+        `personalized=${userContext !== null}`
     );
 
     const startTime = Date.now();
-    const { response: routeData, llmResponse } = await generateRouteWithAI(body);
+    const { response: routeData, llmResponse } = await generateRouteWithAI(
+      body,
+      userContext
+    );
     const generationMs = Date.now() - startTime;
 
     console.info(
@@ -551,7 +585,7 @@ Deno.serve(
     );
 
     // -----------------------------------------------------------------------
-    // 8. Save to database
+    // 9. Save to database
     // -----------------------------------------------------------------------
     const { routeId, createdAt } = await saveRouteToDb(
       userClient,
@@ -562,7 +596,7 @@ Deno.serve(
     );
 
     // -----------------------------------------------------------------------
-    // 9. Cache write (fire-and-forget)
+    // 10. Cache write (fire-and-forget)
     // -----------------------------------------------------------------------
     const fullResponse: RouteResponse = {
       routeId,
@@ -575,12 +609,12 @@ Deno.serve(
     );
 
     // -----------------------------------------------------------------------
-    // 10. Increment usage counter
+    // 11. Increment usage counter
     // -----------------------------------------------------------------------
     await incrementUsage(serviceClient, userId, "generate_route");
 
     // -----------------------------------------------------------------------
-    // 11. Return response
+    // 12. Return response
     // -----------------------------------------------------------------------
     console.info(
       `[generate-route] Route ${routeId} created for user=${userId} ` +
@@ -596,6 +630,7 @@ Deno.serve(
         "X-Cache": "MISS",
         "X-Generation-Ms": String(generationMs),
         "X-AI-Model": `${llmResponse.provider}/${llmResponse.model}`,
+        "X-Personalized": userContext !== null ? "true" : "false",
       },
     });
   })

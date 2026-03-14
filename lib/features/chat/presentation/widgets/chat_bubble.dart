@@ -179,7 +179,7 @@ class _TypingIndicatorState extends State<_TypingIndicator>
 
           return AnimatedBuilder(
             animation: animation,
-            builder: (_, __) => Transform.translate(
+            builder: (_, _) => Transform.translate(
               offset: Offset(0, animation.value),
               child: Container(
                 width: 6,

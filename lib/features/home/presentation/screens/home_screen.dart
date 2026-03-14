@@ -325,7 +325,7 @@ class _HomeContent extends StatelessWidget {
                 horizontal: GeezSpacing.lg,
               ),
               itemCount: kSampleSuggestions.length,
-              separatorBuilder: (_, __) =>
+              separatorBuilder: (_, _) =>
                   const SizedBox(width: GeezSpacing.md),
               itemBuilder: (context, index) {
                 return SuggestionCard(
@@ -594,7 +594,7 @@ class _SectionHeader extends StatelessWidget {
             ),
           ],
         ),
-        if (trailing != null) trailing!,
+        ?trailing,
       ],
     );
   }

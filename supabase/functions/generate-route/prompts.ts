@@ -10,7 +10,7 @@
  * All prompts are deterministic pure functions -- no side effects or I/O.
  */
 
-import type { RouteRequest } from "../_shared/types.ts";
+import type { RouteRequest, UserContext } from "../_shared/types.ts";
 
 // ---------------------------------------------------------------------------
 // Language label mapping
@@ -131,16 +131,183 @@ Output format:
 }
 
 // ---------------------------------------------------------------------------
+// Personalization context builder
+// ---------------------------------------------------------------------------
+
+/**
+ * Explorer tier label mapping for prompt readability.
+ */
+const TIER_LABELS: Record<string, string> = {
+  tourist: "beginner traveler",
+  traveler: "experienced traveler",
+  explorer: "seasoned explorer",
+  local: "local-level expert",
+  legend: "legendary explorer",
+};
+
+/**
+ * Persona level label (1-10 scale) for prompt readability.
+ */
+function personaLabel(level: number): string {
+  if (level >= 8) return "very high";
+  if (level >= 6) return "high";
+  if (level >= 4) return "moderate";
+  if (level >= 2) return "low";
+  return "minimal";
+}
+
+/**
+ * Builds a personalization prompt block from the user's Memory Agent context.
+ *
+ * Returns an empty string when context is null or contains no meaningful data,
+ * so the route generation degrades gracefully for new users.
+ *
+ * @param ctx - The UserContext from the Memory Agent (may be null).
+ * @returns A formatted prompt section, or empty string.
+ */
+export function buildPersonalizationBlock(ctx: UserContext | null): string {
+  if (!ctx) return "";
+
+  const sections: string[] = [];
+
+  // --- Profile section ---
+  if (ctx.profile) {
+    const p = ctx.profile;
+    const profileParts: string[] = [];
+
+    if (p.ageGroup) profileParts.push(`Age group: ${p.ageGroup}`);
+    if (p.travelCompanion) profileParts.push(`Traveling: ${p.travelCompanion}`);
+    if (p.morningPerson !== undefined) {
+      profileParts.push(p.morningPerson ? "Morning person (prefers early starts)" : "Night owl (prefers later starts)");
+    }
+    if (p.crowdTolerance) profileParts.push(`Crowd tolerance: ${p.crowdTolerance}`);
+    if (p.preferredActivities.length > 0) {
+      profileParts.push(`Preferred activities: ${p.preferredActivities.join(", ")}`);
+    }
+
+    // Food preferences
+    const activeFood = Object.entries(p.foodPreferences)
+      .filter(([_, enabled]) => enabled)
+      .map(([pref]) => pref.replace(/_/g, " "));
+    if (activeFood.length > 0) {
+      profileParts.push(`Food preferences: ${activeFood.join(", ")}`);
+    }
+
+    if (profileParts.length > 0) {
+      sections.push(`User profile:\n${profileParts.map((l) => `- ${l}`).join("\n")}`);
+    }
+  }
+
+  // --- Persona section ---
+  if (ctx.persona) {
+    const pe = ctx.persona;
+    const tierLabel = TIER_LABELS[pe.explorerTier] ?? pe.explorerTier;
+    const personaParts = [
+      `Explorer tier: ${tierLabel} (score: ${pe.discoveryScore})`,
+    ];
+
+    // Only include persona levels that are meaningful (>= 3)
+    const levels: [string, number][] = [
+      ["Foodie", pe.foodieLevel],
+      ["History buff", pe.historyBuffLevel],
+      ["Nature lover", pe.natureLoverLevel],
+      ["Adventure seeker", pe.adventureSeekerLevel],
+      ["Culture explorer", pe.cultureExplorerLevel],
+    ];
+    const significantLevels = levels
+      .filter(([_, level]) => level >= 3)
+      .sort((a, b) => b[1] - a[1]);
+
+    if (significantLevels.length > 0) {
+      personaParts.push(
+        `Persona strengths: ${significantLevels.map(([name, level]) => `${name} (${personaLabel(level)})`).join(", ")}`
+      );
+    }
+
+    sections.push(`Travel persona:\n${personaParts.map((l) => `- ${l}`).join("\n")}`);
+  }
+
+  // --- Pace preference ---
+  sections.push(`Inferred pace preference: ${ctx.pacePreference}`);
+
+  // --- Strong preferences ---
+  if (ctx.strongPreferences.length > 0) {
+    sections.push(
+      `Strongly preferred categories (based on past ratings): ${ctx.strongPreferences.join(", ")}`
+    );
+  }
+
+  // --- Previously visited places in this city (avoid repeats) ---
+  // This is injected so the LLM avoids recommending places the user has already seen.
+  // We filter to the request city in buildRoutePrompt, not here.
+
+  // --- Recently visited cities (context for variety) ---
+  if (ctx.visitedPlaces.length > 0) {
+    const recentCities = [
+      ...new Set(ctx.visitedPlaces.slice(0, 20).map((p) => p.city)),
+    ].slice(0, 5);
+    if (recentCities.length > 0) {
+      sections.push(`Recently visited cities: ${recentCities.join(", ")}`);
+    }
+  }
+
+  if (sections.length === 0) return "";
+
+  return `\n=== USER PERSONALIZATION (from Memory Agent) ===\n${sections.join("\n\n")}\n\nUse this context to personalize the route: adjust categories, pacing, food stops, ` +
+    `and hidden gem ratio to match the user's preferences. If the user has a high foodie level, ` +
+    `include more food-related stops. If they have low crowd tolerance, prefer quieter times ` +
+    `and less touristy alternatives. Adapt the pace to their preference.`;
+}
+
+/**
+ * Builds a block listing places the user has already visited in the target
+ * city, so the LLM can avoid recommending them again.
+ *
+ * @param ctx  - The UserContext (may be null).
+ * @param city - The target city for this route request.
+ * @returns A formatted prompt section, or empty string.
+ */
+function buildAlreadyVisitedBlock(
+  ctx: UserContext | null,
+  city: string
+): string {
+  if (!ctx || ctx.visitedPlaces.length === 0) return "";
+
+  const cityLower = city.toLowerCase().trim();
+  const visitedInCity = ctx.visitedPlaces
+    .filter((p) => p.city.toLowerCase().trim() === cityLower)
+    .map((p) => p.placeName);
+
+  if (visitedInCity.length === 0) return "";
+
+  return (
+    `\n=== ALREADY VISITED (avoid these places) ===\n` +
+    `The user has already visited these places in ${city}. ` +
+    `Do NOT include them in the route. Suggest alternatives instead:\n` +
+    visitedInCity.map((name) => `- ${name}`).join("\n")
+  );
+}
+
+// ---------------------------------------------------------------------------
 // User prompt
 // ---------------------------------------------------------------------------
 
 /**
  * Builds the user prompt with all route parameters and constraints.
  *
- * @param request - The validated RouteRequest from the client.
+ * When a UserContext is provided, personalization blocks are injected between
+ * the trip parameters and output requirements. This allows the LLM to adapt
+ * the route to the user's preferences, pace, and history without changing
+ * the base prompt structure.
+ *
+ * @param request    - The validated RouteRequest from the client.
+ * @param userContext - Optional UserContext from the Memory Agent.
  * @returns A fully-formed user prompt string.
  */
-export function buildRoutePrompt(request: RouteRequest): string {
+export function buildRoutePrompt(
+  request: RouteRequest,
+  userContext?: UserContext | null
+): string {
   const lang = request.language ?? "tr";
   const langInfo = LANGUAGE_LABELS[lang] ?? LANGUAGE_LABELS["tr"];
   const styleDesc = STYLE_DESCRIPTIONS[request.travelStyle] ?? STYLE_DESCRIPTIONS["mixed"];
@@ -154,6 +321,13 @@ export function buildRoutePrompt(request: RouteRequest): string {
       ? `\nAdditional user preferences:\n${request.preferences.map((p) => `- ${p}`).join("\n")}`
       : "";
 
+  // Personalization blocks (empty strings for new users / no context)
+  const personalizationBlock = buildPersonalizationBlock(userContext ?? null);
+  const alreadyVisitedBlock = buildAlreadyVisitedBlock(
+    userContext ?? null,
+    request.city
+  );
+
   return `Plan a ${request.durationDays}-day travel route in ${request.city}, ${request.country}.
 
 === TRIP PARAMETERS ===
@@ -164,7 +338,7 @@ export function buildRoutePrompt(request: RouteRequest): string {
 - Transport: ${request.transportMode} — ${transportDesc}
 - Budget: ${request.budgetLevel} — ${budgetDesc}
 - Daily start time: ${request.startTime}
-${preferencesBlock}
+${preferencesBlock}${personalizationBlock}${alreadyVisitedBlock}
 
 === OUTPUT LANGUAGE ===
 ${langInfo.instruction}
