@@ -86,203 +86,210 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
       backgroundColor:
           isDark ? GeezColors.backgroundDark : GeezColors.background,
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: GeezSpacing.lg),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: GeezSpacing.xxl),
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 480),
+            child: SingleChildScrollView(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: GeezSpacing.lg),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: GeezSpacing.xxl),
 
-              // Logo area
-              Center(
-                child: Column(
-                  children: [
-                    Icon(
-                      Icons.travel_explore_rounded,
-                      size: 56,
-                      color: GeezColors.primary,
-                    ),
-                    const SizedBox(height: GeezSpacing.md),
-                    Text(
-                      'Hesap Olustur',
-                      style: GeezTypography.h1.copyWith(
-                        color: isDark
-                            ? GeezColors.textPrimaryDark
-                            : GeezColors.textPrimary,
-                      ),
-                    ),
-                    const SizedBox(height: GeezSpacing.sm),
-                    Text(
-                      'Kisisel seyahat deneyimine basla',
-                      style: GeezTypography.body.copyWith(
-                        color: GeezColors.textSecondary,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: GeezSpacing.xxl),
-
-              // Error message
-              if (authState.errorMessage != null) ...[
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(GeezSpacing.md),
-                  decoration: BoxDecoration(
-                    color: GeezColors.error.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(GeezRadius.button),
-                    border: Border.all(
-                      color: GeezColors.error.withValues(alpha: 0.3),
+                  // Logo area
+                  Center(
+                    child: Column(
+                      children: [
+                        Icon(
+                          Icons.travel_explore_rounded,
+                          size: 56,
+                          color: GeezColors.primary,
+                        ),
+                        const SizedBox(height: GeezSpacing.md),
+                        Text(
+                          'Hesap Olustur',
+                          style: GeezTypography.h1.copyWith(
+                            color: isDark
+                                ? GeezColors.textPrimaryDark
+                                : GeezColors.textPrimary,
+                          ),
+                        ),
+                        const SizedBox(height: GeezSpacing.sm),
+                        Text(
+                          'Kisisel seyahat deneyimine basla',
+                          style: GeezTypography.body.copyWith(
+                            color: GeezColors.textSecondary,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                  child: Row(
-                    children: [
-                      const Icon(
-                        Icons.error_outline,
-                        color: GeezColors.error,
-                        size: 20,
+
+                  const SizedBox(height: GeezSpacing.xxl),
+
+                  // Error message
+                  if (authState.errorMessage != null) ...[
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(GeezSpacing.md),
+                      decoration: BoxDecoration(
+                        color: GeezColors.error.withValues(alpha: 0.1),
+                        borderRadius:
+                            BorderRadius.circular(GeezRadius.button),
+                        border: Border.all(
+                          color: GeezColors.error.withValues(alpha: 0.3),
+                        ),
                       ),
-                      const SizedBox(width: GeezSpacing.sm),
-                      Expanded(
-                        child: Text(
-                          authState.errorMessage!,
-                          style: GeezTypography.bodySmall.copyWith(
+                      child: Row(
+                        children: [
+                          const Icon(
+                            Icons.error_outline,
                             color: GeezColors.error,
+                            size: 20,
                           ),
+                          const SizedBox(width: GeezSpacing.sm),
+                          Expanded(
+                            child: Text(
+                              authState.errorMessage!,
+                              style: GeezTypography.bodySmall.copyWith(
+                                color: GeezColors.error,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: GeezSpacing.lg),
+                  ],
+
+                  // Email
+                  AuthTextField(
+                    controller: _emailController,
+                    label: 'E-posta',
+                    hint: 'ornek@email.com',
+                    keyboardType: TextInputType.emailAddress,
+                    prefixIcon: Icons.email_outlined,
+                  ),
+
+                  const SizedBox(height: GeezSpacing.md),
+
+                  // Password
+                  AuthTextField(
+                    controller: _passwordController,
+                    label: 'Sifre',
+                    hint: 'En az 6 karakter',
+                    isPassword: true,
+                    prefixIcon: Icons.lock_outlined,
+                  ),
+
+                  const SizedBox(height: GeezSpacing.md),
+
+                  // Confirm password
+                  AuthTextField(
+                    controller: _confirmPasswordController,
+                    label: 'Sifre Tekrar',
+                    hint: 'Sifreni tekrar gir',
+                    isPassword: true,
+                    prefixIcon: Icons.lock_outlined,
+                    textInputAction: TextInputAction.done,
+                    errorText: _passwordMatchError,
+                    onSubmitted: (_) => _handleSignup(),
+                  ),
+
+                  const SizedBox(height: GeezSpacing.lg),
+
+                  // Signup button
+                  SizedBox(
+                    width: double.infinity,
+                    child: GeezButton(
+                      label: 'Kayit Ol',
+                      onTap: _handleSignup,
+                      isLoading: authState.isLoading,
+                      icon: Icons.person_add_rounded,
+                    ),
+                  ),
+
+                  const SizedBox(height: GeezSpacing.lg),
+
+                  // Terms
+                  Center(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: GeezSpacing.md),
+                      child: Text(
+                        'Kayit olarak Kullanim Sartlarini ve Gizlilik Politikasini kabul etmis olursun.',
+                        style: GeezTypography.caption.copyWith(
+                          color: GeezColors.textSecondary,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: GeezSpacing.lg),
+
+                  // Divider
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Divider(
+                          color: isDark
+                              ? Colors.white.withValues(alpha: 0.1)
+                              : Colors.black.withValues(alpha: 0.1),
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: GeezSpacing.md),
+                        child: Text(
+                          'veya',
+                          style: GeezTypography.bodySmall.copyWith(
+                            color: GeezColors.textSecondary,
+                          ),
+                        ),
+                      ),
+                      Expanded(
+                        child: Divider(
+                          color: isDark
+                              ? Colors.white.withValues(alpha: 0.1)
+                              : Colors.black.withValues(alpha: 0.1),
                         ),
                       ),
                     ],
                   ),
-                ),
-                const SizedBox(height: GeezSpacing.lg),
-              ],
 
-              // Email
-              AuthTextField(
-                controller: _emailController,
-                label: 'E-posta',
-                hint: 'ornek@email.com',
-                keyboardType: TextInputType.emailAddress,
-                prefixIcon: Icons.email_outlined,
-              ),
+                  const SizedBox(height: GeezSpacing.lg),
 
-              const SizedBox(height: GeezSpacing.md),
-
-              // Password
-              AuthTextField(
-                controller: _passwordController,
-                label: 'Sifre',
-                hint: 'En az 6 karakter',
-                isPassword: true,
-                prefixIcon: Icons.lock_outlined,
-              ),
-
-              const SizedBox(height: GeezSpacing.md),
-
-              // Confirm password
-              AuthTextField(
-                controller: _confirmPasswordController,
-                label: 'Sifre Tekrar',
-                hint: 'Sifreni tekrar gir',
-                isPassword: true,
-                prefixIcon: Icons.lock_outlined,
-                textInputAction: TextInputAction.done,
-                errorText: _passwordMatchError,
-                onSubmitted: (_) => _handleSignup(),
-              ),
-
-              const SizedBox(height: GeezSpacing.lg),
-
-              // Signup button
-              SizedBox(
-                width: double.infinity,
-                child: GeezButton(
-                  label: 'Kayit Ol',
-                  onTap: _handleSignup,
-                  isLoading: authState.isLoading,
-                  icon: Icons.person_add_rounded,
-                ),
-              ),
-
-              const SizedBox(height: GeezSpacing.lg),
-
-              // Terms
-              Center(
-                child: Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: GeezSpacing.md),
-                  child: Text(
-                    'Kayit olarak Kullanim Sartlarini ve Gizlilik Politikasini kabul etmis olursun.',
-                    style: GeezTypography.caption.copyWith(
-                      color: GeezColors.textSecondary,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: GeezSpacing.lg),
-
-              // Divider
-              Row(
-                children: [
-                  Expanded(
-                    child: Divider(
-                      color: isDark
-                          ? Colors.white.withValues(alpha: 0.1)
-                          : Colors.black.withValues(alpha: 0.1),
+                  // Go to login
+                  Center(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          'Zaten hesabin var mi? ',
+                          style: GeezTypography.body.copyWith(
+                            color: GeezColors.textSecondary,
+                          ),
+                        ),
+                        GestureDetector(
+                          onTap: () => context.go('/login'),
+                          child: Text(
+                            'Giris Yap',
+                            style: GeezTypography.body.copyWith(
+                              color: GeezColors.primary,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                  Padding(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: GeezSpacing.md),
-                    child: Text(
-                      'veya',
-                      style: GeezTypography.bodySmall.copyWith(
-                        color: GeezColors.textSecondary,
-                      ),
-                    ),
-                  ),
-                  Expanded(
-                    child: Divider(
-                      color: isDark
-                          ? Colors.white.withValues(alpha: 0.1)
-                          : Colors.black.withValues(alpha: 0.1),
-                    ),
-                  ),
+
+                  const SizedBox(height: GeezSpacing.xxl),
                 ],
               ),
-
-              const SizedBox(height: GeezSpacing.lg),
-
-              // Go to login
-              Center(
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      'Zaten hesabin var mi? ',
-                      style: GeezTypography.body.copyWith(
-                        color: GeezColors.textSecondary,
-                      ),
-                    ),
-                    GestureDetector(
-                      onTap: () => context.go('/login'),
-                      child: Text(
-                        'Giris Yap',
-                        style: GeezTypography.body.copyWith(
-                          color: GeezColors.primary,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: GeezSpacing.xxl),
-            ],
+            ),
           ),
         ),
       ),

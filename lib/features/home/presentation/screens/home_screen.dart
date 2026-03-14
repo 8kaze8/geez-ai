@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:geez_ai/core/router/route_names.dart';
 import 'package:geez_ai/core/theme/colors.dart';
 import 'package:geez_ai/core/theme/spacing.dart';
 import 'package:geez_ai/core/theme/typography.dart';
@@ -274,7 +276,9 @@ class _HomeContent extends StatelessWidget {
               child: data.activeRoute != null
                   ? ActiveRouteCard(
                       route: data.activeRoute!,
-                      onContinue: () {},
+                      onContinue: () => context.go(
+                        RoutePaths.routeDetailPath(data.activeRoute!.id),
+                      ),
                     )
                   : _NoActiveRouteCard(isDark: isDark),
             ),
@@ -317,7 +321,7 @@ class _HomeContent extends StatelessWidget {
               itemBuilder: (context, index) {
                 return SuggestionCard(
                   suggestion: kSampleSuggestions[index],
-                  onPlan: () {},
+                  onPlan: () => context.go(RoutePaths.newRoute),
                 );
               },
             ),
@@ -613,7 +617,7 @@ class _WelcomeBanner extends StatelessWidget {
           const SizedBox(height: GeezSpacing.md),
           GeezButton(
             label: 'Rota Olustur',
-            onTap: () {},
+            onTap: () => context.go(RoutePaths.newRoute),
             icon: Icons.add_rounded,
           ),
         ],
