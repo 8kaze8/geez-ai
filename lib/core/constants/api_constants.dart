@@ -14,7 +14,7 @@ class ApiConstants {
 
   // Feedback
   static const String feedbackPath = '/rest/v1/trip_feedback';
-  static const String feedbackSubmitPath = '/functions/v1/submit-feedback';
+  // feedbackSubmitPath removed — submit-feedback Edge Function is not deployed.
 
   // User & Profile
   static const String usersPath = '/rest/v1/users';

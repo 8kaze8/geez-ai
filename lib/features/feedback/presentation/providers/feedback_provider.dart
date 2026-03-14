@@ -85,7 +85,7 @@ class FeedbackFormNotifier extends StateNotifier<FeedbackFormState> {
   final Ref _ref;
 
   void setOverallRating(int rating) {
-    assert(rating >= 1 && rating <= 5);
+    if (rating < 1 || rating > 5) return;
     state = state.copyWith(
       overallRating: rating,
       error: () => null,
@@ -93,7 +93,7 @@ class FeedbackFormNotifier extends StateNotifier<FeedbackFormState> {
   }
 
   void setAccuracyRating(int rating) {
-    assert(rating >= 1 && rating <= 5);
+    if (rating < 1 || rating > 5) return;
     state = state.copyWith(
       accuracyRating: rating,
       error: () => null,
@@ -160,12 +160,12 @@ class FeedbackFormNotifier extends StateNotifier<FeedbackFormState> {
       }
       if (state.accuracyRating > 0) {
         if (supplemental.isNotEmpty) supplemental.write('\n');
-        supplemental.write('[Dogruluk puani: ${state.accuracyRating}/5]');
+        supplemental.write('[Doğruluk puanı: ${state.accuracyRating}/5]');
       }
       if (state.wouldRecommend != null) {
         if (supplemental.isNotEmpty) supplemental.write('\n');
         supplemental.write(
-          '[Onerir mi: ${state.wouldRecommend! ? "Evet" : "Hayir"}]',
+          '[Önerir mi: ${state.wouldRecommend! ? "Evet" : "Hayır"}]',
         );
       }
 

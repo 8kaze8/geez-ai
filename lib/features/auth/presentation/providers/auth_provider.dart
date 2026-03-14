@@ -96,8 +96,13 @@ class AuthStateNotifier extends StateNotifier<AuthState> {
 
   /// Sign out and update state.
   Future<void> signOut() async {
-    await _repo.signOut();
-    state = const AuthState.unauthenticated();
+    try {
+      await _repo.signOut();
+    } catch (_) {
+      // Ignore signOut errors — always transition to unauthenticated.
+    } finally {
+      state = const AuthState.unauthenticated();
+    }
   }
 
   @override

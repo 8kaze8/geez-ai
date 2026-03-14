@@ -637,7 +637,7 @@ class _RecommendToggle extends StatelessWidget {
         const SizedBox(width: GeezSpacing.md),
         Expanded(
           child: _ToggleOption(
-            label: 'Hayir',
+            label: 'Hayır',
             icon: Icons.thumb_down_outlined,
             isSelected: value == false,
             selectedColor: GeezColors.error,
@@ -746,7 +746,7 @@ class _FreeTextField extends StatelessWidget {
       maxLength: 500,
       style: GeezTypography.body.copyWith(color: textPrimary),
       decoration: InputDecoration(
-        hintText: 'Yorumunuzu buraya yazin...',
+        hintText: 'Yorumunuzu buraya yazın...',
         hintStyle: GeezTypography.body.copyWith(
           color: GeezColors.textSecondary,
         ),
