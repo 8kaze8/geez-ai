@@ -1,18 +1,25 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geez_ai/core/theme/colors.dart';
 import 'package:geez_ai/core/theme/typography.dart';
 import 'package:geez_ai/core/theme/spacing.dart';
+import 'package:geez_ai/features/auth/presentation/providers/auth_provider.dart';
 
-class SplashScreen extends StatefulWidget {
+/// Splash screen shown at app launch.
+///
+/// Plays the brand animation while [authStateProvider] resolves the stored
+/// session. Once auth state is known the router guard (in `app_router.dart`)
+/// automatically redirects to login or home -- this screen does NOT navigate
+/// itself.
+class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
 
   @override
-  State<SplashScreen> createState() => _SplashScreenState();
+  ConsumerState<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen>
+class _SplashScreenState extends ConsumerState<SplashScreen>
     with TickerProviderStateMixin {
   late final AnimationController _planeController;
   late final AnimationController _fadeController;
@@ -117,10 +124,8 @@ class _SplashScreenState extends State<SplashScreen>
     if (!mounted) return;
     _dotsController.forward();
 
-    // Navigate after 2.5 seconds total
-    await Future.delayed(const Duration(milliseconds: 1300));
-    if (!mounted) return;
-    context.go('/onboarding');
+    // The router guard handles navigation once auth state resolves.
+    // No explicit context.go() needed here.
   }
 
   @override
@@ -135,6 +140,9 @@ class _SplashScreenState extends State<SplashScreen>
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    // Watch auth state -- this triggers the router guard redirect.
+    ref.watch(authStateProvider);
 
     return Scaffold(
       backgroundColor:
@@ -189,7 +197,7 @@ class _SplashScreenState extends State<SplashScreen>
               child: FadeTransition(
                 opacity: _taglineFade,
                 child: Text(
-                  'Her gezi bir keşif',
+                  'Her gezi bir kesif',
                   style: GeezTypography.body.copyWith(
                     color: GeezColors.textSecondary,
                     fontStyle: FontStyle.italic,
