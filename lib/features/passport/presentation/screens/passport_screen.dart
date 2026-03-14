@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../core/theme/colors.dart';
-import '../../../../core/theme/spacing.dart';
-import '../../../../core/theme/typography.dart';
-import '../../../../shared/widgets/geez_button.dart';
-import '../../../../shared/widgets/geez_card.dart';
-import '../providers/passport_provider.dart';
-import '../widgets/collection_card.dart';
-import '../widgets/stamp_card.dart';
-import '../widgets/stats_row.dart';
+import 'package:go_router/go_router.dart';
+import 'package:geez_ai/core/router/route_names.dart';
+import 'package:geez_ai/core/theme/colors.dart';
+import 'package:geez_ai/core/theme/spacing.dart';
+import 'package:geez_ai/core/theme/typography.dart';
+import 'package:geez_ai/shared/widgets/geez_button.dart';
+import 'package:geez_ai/shared/widgets/geez_card.dart';
+import 'package:geez_ai/features/passport/presentation/providers/passport_provider.dart';
+import 'package:geez_ai/features/passport/presentation/widgets/collection_card.dart';
+import 'package:geez_ai/features/passport/presentation/widgets/stamp_card.dart';
+import 'package:geez_ai/features/passport/presentation/widgets/stats_row.dart';
 
 // ---------------------------------------------------------------------------
 // Static collection definitions (data-backed in a future sprint)
@@ -62,10 +64,7 @@ class PassportScreen extends ConsumerWidget {
           ),
           data: (state) => state.isEmpty
               ? _PassportEmpty(
-                  onCreateRoute: () {
-                    // Navigate to chat/route creation — handled by router
-                    // This is a placeholder until GoRouter integration is wired.
-                  },
+                  onCreateRoute: () => context.go(RoutePaths.newRoute),
                 )
               : _PassportContent(state: state),
         ),
@@ -138,7 +137,9 @@ class _PassportContent extends ConsumerWidget {
             // Share Button
             GeezButton(
               label: 'Pasaportumu Paylas',
-              onTap: () {},
+              onTap: () => ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Yakinda!')),
+              ),
               icon: Icons.share,
               width: double.infinity,
             ),

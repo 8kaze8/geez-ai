@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import '../../core/theme/colors.dart';
-import '../../core/theme/spacing.dart';
-import '../../core/theme/typography.dart';
+import 'package:geez_ai/core/theme/colors.dart';
+import 'package:geez_ai/core/theme/spacing.dart';
+import 'package:geez_ai/core/theme/typography.dart';
 
 class GeezChip extends StatefulWidget {
   const GeezChip({

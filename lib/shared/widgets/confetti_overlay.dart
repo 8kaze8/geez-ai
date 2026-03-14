@@ -1,6 +1,6 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
-import '../../core/theme/colors.dart';
+import 'package:geez_ai/core/theme/colors.dart';
 
 class ConfettiOverlay extends StatefulWidget {
   const ConfettiOverlay({

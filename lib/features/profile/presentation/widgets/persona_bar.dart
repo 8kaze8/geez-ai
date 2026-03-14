@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import '../../../../core/theme/colors.dart';
-import '../../../../core/theme/spacing.dart';
-import '../../../../core/theme/typography.dart';
-import '../../../passport/domain/mock_passport_data.dart';
+import 'package:geez_ai/core/theme/colors.dart';
+import 'package:geez_ai/core/theme/spacing.dart';
+import 'package:geez_ai/core/theme/typography.dart';
+import 'package:geez_ai/features/passport/domain/mock_passport_data.dart';
 
 // ---------------------------------------------------------------------------
 // PersonaBar — animates a single persona-level bar.

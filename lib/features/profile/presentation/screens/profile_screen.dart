@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../core/theme/colors.dart';
-import '../../../../core/theme/spacing.dart';
-import '../../../../core/theme/typography.dart';
-import '../../../../shared/widgets/geez_button.dart';
-import '../../../../shared/widgets/geez_card.dart';
-import '../../../passport/domain/mock_passport_data.dart';
-import '../providers/profile_provider.dart';
-import '../widgets/persona_bar.dart';
+import 'package:geez_ai/core/theme/colors.dart';
+import 'package:geez_ai/core/theme/spacing.dart';
+import 'package:geez_ai/core/theme/typography.dart';
+import 'package:geez_ai/shared/widgets/geez_button.dart';
+import 'package:geez_ai/shared/widgets/geez_card.dart';
+import 'package:geez_ai/features/profile/presentation/providers/profile_provider.dart';
+import 'package:geez_ai/features/profile/presentation/widgets/persona_bar.dart';
 
 // ---------------------------------------------------------------------------
 // ProfileScreen
@@ -50,7 +49,7 @@ class _ProfileLoadingState extends StatelessWidget {
         : Colors.black.withValues(alpha: 0.07);
 
     return SingleChildScrollView(
-      physics: const NeverScrollableScrollPhysics(),
+      physics: const ClampingScrollPhysics(),
       padding: const EdgeInsets.symmetric(
         horizontal: GeezSpacing.md,
         vertical: GeezSpacing.lg,
@@ -232,7 +231,9 @@ class _ProfileContent extends ConsumerWidget {
           Center(
             child: GeezButton(
               label: 'Personami Paylas',
-              onTap: () {},
+              onTap: () => ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Yakinda!')),
+              ),
               icon: Icons.share,
               variant: GeezButtonVariant.secondary,
               width: double.infinity,
@@ -432,7 +433,7 @@ class _ProfileContent extends ConsumerWidget {
             cultureExplorerLevel: data.persona!.cultureExplorerLevel,
             natureLoverLevel: data.persona!.natureLoverLevel,
           )
-        : MockPassportData.personaCategories;
+        : [];
 
     if (categories.isEmpty) {
       return GeezCard(
@@ -440,12 +441,30 @@ class _ProfileContent extends ConsumerWidget {
         child: Center(
           child: Padding(
             padding: const EdgeInsets.symmetric(vertical: GeezSpacing.lg),
-            child: Text(
-              'Persona henuz olusturulmadi.\nBir rota olusturarak baslayabilirsin.',
-              style: GeezTypography.bodySmall.copyWith(
-                color: GeezColors.textSecondary,
-              ),
-              textAlign: TextAlign.center,
+            child: Column(
+              children: [
+                const Icon(
+                  Icons.person_search_outlined,
+                  size: 40,
+                  color: GeezColors.textSecondary,
+                ),
+                const SizedBox(height: GeezSpacing.sm),
+                Text(
+                  'Persona henüz oluşmadı',
+                  style: GeezTypography.body.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: GeezColors.textSecondary,
+                  ),
+                ),
+                const SizedBox(height: GeezSpacing.xs),
+                Text(
+                  'Persona bilgilerin ilk gezinden sonra oluşacak.',
+                  style: GeezTypography.bodySmall.copyWith(
+                    color: GeezColors.textSecondary,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
             ),
           ),
         ),
@@ -461,33 +480,40 @@ class _ProfileContent extends ConsumerWidget {
   }
 
   Widget _buildTripHistory(bool isDark, Color textColor) {
-    // Trip history is still mock data — will be replaced in Sprint 3
-    // when the trips table / repository is implemented.
-    if (MockPassportData.tripHistory.isEmpty) {
-      return GeezCard(
-        elevation: 0,
-        child: Center(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: GeezSpacing.lg),
-            child: Text(
-              'Henuz tamamlanmis bir gezin yok.',
-              style: GeezTypography.bodySmall.copyWith(
+    return GeezCard(
+      elevation: 0,
+      child: Center(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: GeezSpacing.lg),
+          child: Column(
+            children: [
+              const Icon(
+                Icons.luggage_outlined,
+                size: 40,
                 color: GeezColors.textSecondary,
               ),
-            ),
+              const SizedBox(height: GeezSpacing.sm),
+              Text(
+                'Henüz gezi yok',
+                style: GeezTypography.body.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: isDark
+                      ? GeezColors.textPrimaryDark
+                      : GeezColors.textPrimary,
+                ),
+              ),
+              const SizedBox(height: GeezSpacing.xs),
+              Text(
+                'Tamamlanan gezilerin burada görünecek.',
+                style: GeezTypography.bodySmall.copyWith(
+                  color: GeezColors.textSecondary,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
           ),
         ),
-      );
-    }
-
-    return Column(
-      children: MockPassportData.tripHistory.map((trip) {
-        return _TripHistoryTile(
-          trip: trip,
-          isDark: isDark,
-          textColor: textColor,
-        );
-      }).toList(),
+      ),
     );
   }
 
@@ -519,7 +545,9 @@ class _ProfileContent extends ConsumerWidget {
               InkWell(
                 onTap: item.isDestructive
                     ? () => _confirmSignOut(context, ref)
-                    : () {},
+                    : () => ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Yakinda!')),
+                        ),
                 borderRadius: BorderRadius.vertical(
                   top: index == 0
                       ? const Radius.circular(GeezRadius.card)
@@ -640,87 +668,6 @@ class _ProfileContent extends ConsumerWidget {
 // Private helper widgets
 // ---------------------------------------------------------------------------
 
-class _TripHistoryTile extends StatelessWidget {
-  const _TripHistoryTile({
-    required this.trip,
-    required this.isDark,
-    required this.textColor,
-  });
-
-  final TripHistory trip;
-  final bool isDark;
-  final Color textColor;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: GeezSpacing.sm),
-      child: GeezCard(
-        elevation: 0,
-        onTap: () {},
-        child: Row(
-          children: [
-            // Flag
-            Container(
-              width: 44,
-              height: 44,
-              decoration: BoxDecoration(
-                color: GeezColors.primary.withValues(alpha: 0.08),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              alignment: Alignment.center,
-              child: Text(
-                trip.flag,
-                style: const TextStyle(fontSize: 24),
-              ),
-            ),
-            const SizedBox(width: GeezSpacing.md),
-            // Info
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    trip.cityName,
-                    style: GeezTypography.body.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: textColor,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    '${trip.date} \u2022 ${trip.days} gun \u2022 ${trip.stops} durak',
-                    style: GeezTypography.caption.copyWith(
-                      color: GeezColors.textSecondary,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            // Score badge
-            Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: GeezSpacing.sm,
-                vertical: GeezSpacing.xs,
-              ),
-              decoration: BoxDecoration(
-                color: GeezColors.accent.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(GeezRadius.chip),
-              ),
-              child: Text(
-                '+${trip.score}',
-                style: GeezTypography.caption.copyWith(
-                  fontWeight: FontWeight.w700,
-                  color: GeezColors.accent,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
 
 class _SettingItem {
   const _SettingItem({

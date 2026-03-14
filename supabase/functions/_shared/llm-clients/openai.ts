@@ -28,7 +28,10 @@ import { AppError } from "../error-handler.ts";
 // ---------------------------------------------------------------------------
 
 const OPENAI_API_URL = "https://api.openai.com/v1/chat/completions";
-const DEFAULT_TIMEOUT_MS = 30_000;
+// GPT-4.1-mini can take 30–60 s for longer route-generation prompts.
+// Raised to 90 s to match the Gemini client and prevent false timeouts
+// when OpenAI is under load.
+const DEFAULT_TIMEOUT_MS = 90_000;
 const MAX_RETRIES = 1;
 const RETRYABLE_STATUS_CODES = [429, 500, 503];
 

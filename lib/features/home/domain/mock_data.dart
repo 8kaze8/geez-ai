@@ -79,26 +79,6 @@ const sampleActiveRoute = MockRoute(
   date: '13 Mar 2026',
 );
 
-const sampleSuggestions = [
-  MockSuggestion(
-    city: 'Roma',
-    country: 'Italya',
-    flag: '\u{1F1EE}\u{1F1F9}',
-    reason: 'Tarih sever olarak kacirma',
-  ),
-  MockSuggestion(
-    city: 'Atina',
-    country: 'Yunanistan',
-    flag: '\u{1F1EC}\u{1F1F7}',
-    reason: 'Acik hava + antik ruins',
-  ),
-  MockSuggestion(
-    city: 'Barselona',
-    country: 'Ispanya',
-    flag: '\u{1F1EA}\u{1F1F8}',
-    reason: 'Gaudi + street food cenneti',
-  ),
-];
 
 const sampleDiscoveries = [
   MockDiscovery(

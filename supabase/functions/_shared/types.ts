@@ -320,11 +320,16 @@ export interface RateLimitInfo {
 /**
  * Cache key components for AI route responses.
  *
- * Canonical key: `${city}:${travelStyle}:${budgetLevel}:${transportMode}:${language}`
+ * Canonical key: `${city}:${country}:${travelStyle}:${budgetLevel}:${transportMode}:${language}`
  * TTL: 7 days (604 800 seconds).
+ *
+ * country is included so that city names that appear in multiple countries
+ * (e.g. "Victoria" in Canada vs. Seychelles) never collide.
  */
 export interface RouteCacheKey {
   city: string;
+  /** ISO 3166-1 alpha-2 country code or full country name. */
+  country: string;
   travelStyle: TravelStyle;
   budgetLevel: BudgetLevel;
   transportMode: TransportMode;
@@ -340,6 +345,7 @@ export interface RouteCacheKey {
 export function buildCacheKey(key: RouteCacheKey): string {
   return [
     key.city.toLowerCase().trim(),
+    key.country.toLowerCase().trim(),
     key.travelStyle,
     key.budgetLevel,
     key.transportMode,

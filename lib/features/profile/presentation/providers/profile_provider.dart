@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:geez_ai/core/constants/gamification_constants.dart';
 import 'package:geez_ai/features/auth/data/user_repository.dart';
 import 'package:geez_ai/features/auth/domain/user_model.dart';
 import 'package:geez_ai/features/auth/domain/user_profile_model.dart';
@@ -33,56 +34,20 @@ class ProfileData {
   /// Persona title shown under the avatar. Falls back to "Gezgin".
   String get personaTitle {
     if (persona == null) return 'Gezgin';
-    final tier = persona!.explorerTier;
-    // DB CHECK: tourist | traveler | explorer | local | legend
-    switch (tier.toLowerCase()) {
-      case 'tourist':
-        return 'Turist';
-      case 'traveler':
-        return 'Gezgin';
-      case 'explorer':
-        return 'Ka\u015fif';
-      case 'local':
-        return 'Yerel Uzman';
-      case 'legend':
-        return 'Efsane Gezgin';
-      default:
-        return tier;
-    }
+    return GamificationConstants.tierLabels[persona!.explorerTier.toLowerCase()] ??
+        persona!.explorerTier;
   }
 
   /// Discovery score, 0 when no persona yet.
   int get discoveryScore => persona?.discoveryScore ?? 0;
 
-  /// Number of filled stars (0-5) based on discovery score.
-  int get starCount {
-    final score = discoveryScore;
-    if (score >= 2000) return 5;
-    if (score >= 1000) return 4;
-    if (score >= 500) return 3;
-    if (score >= 200) return 2;
-    if (score >= 50) return 1;
-    return 0;
-  }
+  /// Number of filled stars (1-5) based on discovery score.
+  int get starCount => GamificationConstants.starsForScore(discoveryScore);
 
   /// Tier label for the discovery score badge.
-  String get tierLabel {
-    // DB CHECK: tourist | traveler | explorer | local | legend
-    switch (persona?.explorerTier.toLowerCase()) {
-      case 'tourist':
-        return 'Turist';
-      case 'traveler':
-        return 'Gezgin';
-      case 'explorer':
-        return 'Ka\u015fif';
-      case 'local':
-        return 'Yerel Uzman';
-      case 'legend':
-        return 'Efsane';
-      default:
-        return 'Turist';
-    }
-  }
+  String get tierLabel =>
+      GamificationConstants.tierLabels[persona?.explorerTier.toLowerCase()] ??
+      'Turist';
 }
 
 // ---------------------------------------------------------------------------

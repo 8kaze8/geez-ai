@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../core/theme/colors.dart';
-import '../../core/theme/spacing.dart';
+import 'package:geez_ai/core/theme/colors.dart';
+import 'package:geez_ai/core/theme/spacing.dart';
 
 class GeezCard extends StatelessWidget {
   const GeezCard({

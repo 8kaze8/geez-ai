@@ -29,7 +29,10 @@ import { AppError } from "../error-handler.ts";
 const GEMINI_MODEL = "gemini-2.5-flash";
 const GEMINI_BASE_URL =
   "https://generativelanguage.googleapis.com/v1beta/models";
-const DEFAULT_TIMEOUT_MS = 30_000;
+// Gemini 2.5 Flash can take 60–90 s for complex multi-day route generation.
+// 90 s gives one full retry attempt within the Supabase Edge Function 300 s
+// wall-clock limit while still protecting against hung connections.
+const DEFAULT_TIMEOUT_MS = 90_000;
 const MAX_RETRIES = 1;
 const RETRYABLE_STATUS_CODES = [429, 500, 503];
 

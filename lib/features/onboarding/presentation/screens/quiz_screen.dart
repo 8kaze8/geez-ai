@@ -129,7 +129,7 @@ class _QuizScreenState extends State<QuizScreen>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(height: MediaQuery.of(context).padding.top + GeezSpacing.xl),
+          const SizedBox(height: GeezSpacing.xl),
 
           // Question 1: Travel style
           SlideTransition(

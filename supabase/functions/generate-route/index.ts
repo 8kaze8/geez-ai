@@ -234,6 +234,7 @@ const VALID_CATEGORIES = new Set([
   "religious",
   "shopping",
   "entertainment",
+  "beach",
   "other",
 ]);
 
@@ -268,7 +269,9 @@ function normalizeCategory(raw: string): string {
     food: "restaurant",
     mall: "shopping",
     store: "shopping",
-    beach: "viewpoint",
+    beach: "beach",
+    seaside: "beach",
+    coastal: "beach",
     scenic: "viewpoint",
     panoramic: "viewpoint",
     "observation_deck": "viewpoint",
@@ -454,6 +457,7 @@ Deno.serve(
     // -----------------------------------------------------------------------
     const cacheKey: RouteCacheKey = {
       city: body.city,
+      country: body.country,
       travelStyle: body.travelStyle,
       budgetLevel: body.budgetLevel,
       transportMode: body.transportMode,
@@ -463,9 +467,61 @@ Deno.serve(
     const cached = await getCachedRoute(serviceClient, cacheKey);
     if (cached) {
       console.info(
-        `[generate-route] Cache hit for user=${userId} key=${body.city}:${body.travelStyle}`
+        `[generate-route] Cache hit for user=${userId} key=${body.city}:${body.country}:${body.travelStyle}`
       );
-      return new Response(JSON.stringify(cached), {
+
+      // SECURITY: The cached RouteResponse contains the original user's
+      // routeId — which this user cannot access due to RLS.  We must create
+      // a fresh route + stops row owned by the current user, using the cached
+      // AI data, and return the NEW routeId.
+      //
+      // The cached entry has generationCostUsd = 0 to indicate no new AI
+      // tokens were consumed.  The LLM metadata fields are preserved from the
+      // cached data so cost tracking stays consistent.
+      const cachedRouteData: Omit<RouteResponse, "routeId" | "createdAt"> = {
+        title: cached.title,
+        city: cached.city,
+        country: cached.country,
+        durationDays: cached.durationDays,
+        days: cached.days,
+        aiModelUsed: cached.aiModelUsed,
+        generationCostUsd: 0, // no new tokens consumed
+      };
+
+      // Synthesise a minimal LLMResponse so saveRouteToDb has metadata to log.
+      // latencyMs and fallbackAttempts are set to sentinel values that make it
+      // clear in the DB that this route was served from cache.
+      const cachedLlmResponse: LLMResponse = {
+        provider: cached.aiModelUsed,
+        model: `${cached.aiModelUsed}/cached`,
+        content: "",
+        usage: { inputTokens: 0, outputTokens: 0 },
+        latencyMs: 0,
+        fallbackAttempts: 0,
+      };
+
+      const { routeId: newRouteId, createdAt: newCreatedAt } =
+        await saveRouteToDb(
+          userClient,
+          userId,
+          body,
+          cachedRouteData,
+          cachedLlmResponse
+        );
+
+      await incrementUsage(serviceClient, userId, "generate_route");
+
+      const cacheHitResponse: RouteResponse = {
+        ...cachedRouteData,
+        routeId: newRouteId,
+        createdAt: newCreatedAt,
+      };
+
+      console.info(
+        `[generate-route] Cache-hit route ${newRouteId} created for user=${userId}`
+      );
+
+      return new Response(JSON.stringify(cacheHitResponse), {
         status: 200,
         headers: {
           ...corsHeaders(origin),

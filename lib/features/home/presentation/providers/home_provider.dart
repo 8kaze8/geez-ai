@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:geez_ai/core/constants/gamification_constants.dart';
 import 'package:geez_ai/features/auth/presentation/providers/auth_provider.dart';
 import 'package:geez_ai/features/auth/data/user_repository.dart';
 import 'package:geez_ai/features/home/data/home_repository.dart';
@@ -42,60 +43,31 @@ class HomeData {
   int get discoveryScore => persona?.discoveryScore ?? 0;
 
   /// Turkish-localised tier label.
-  String get tierLabel {
-    switch (persona?.explorerTier.toLowerCase()) {
-      case 'tourist':
-        return 'Turist';
-      case 'traveler':
-        return 'Gezgin';
-      case 'explorer':
-        return 'Ka\u015fif';
-      case 'local':
-        return 'Yerel Uzman';
-      case 'legend':
-        return 'Efsane';
-      default:
-        return 'Turist';
-    }
-  }
+  String get tierLabel =>
+      GamificationConstants.tierLabels[persona?.explorerTier.toLowerCase()] ??
+      'Turist';
 
   /// Tier to display as the "next" goal above the current tier.
   String get nextTierLabel {
-    switch (persona?.explorerTier.toLowerCase()) {
-      case 'tourist':
-        return 'Gezgin';
-      case 'traveler':
-        return 'Ka\u015fif';
-      case 'explorer':
-        return 'Yerel Uzman';
-      case 'local':
-        return 'Efsane';
-      default:
-        return 'Gezgin';
-    }
+    const tiers = ['tourist', 'traveler', 'explorer', 'local', 'legend'];
+    final current = persona?.explorerTier.toLowerCase() ?? 'tourist';
+    final index = tiers.indexOf(current);
+    if (index < 0 || index >= tiers.length - 1) return 'Gezgin';
+    return GamificationConstants.tierLabels[tiers[index + 1]] ?? 'Gezgin';
   }
 
-  /// Points remaining to reach the next tier, based on fixed thresholds.
+  /// Points remaining to reach the next tier, based on canonical thresholds.
   int get pointsToNextTier {
     final score = discoveryScore;
-    if (score < 50) return 50 - score;
-    if (score < 200) return 200 - score;
-    if (score < 500) return 500 - score;
-    if (score < 1000) return 1000 - score;
-    if (score < 2000) return 2000 - score;
+    const thresholds = [200, 500, 1000, 2500];
+    for (final t in thresholds) {
+      if (score < t) return t - score;
+    }
     return 0;
   }
 
   /// Progress (0.0 – 1.0) within the current tier band.
-  double get tierProgress {
-    final score = discoveryScore;
-    if (score >= 2000) return 1.0;
-    if (score >= 1000) return (score - 1000) / 1000;
-    if (score >= 500) return (score - 500) / 500;
-    if (score >= 200) return (score - 200) / 300;
-    if (score >= 50) return (score - 50) / 150;
-    return score / 50;
-  }
+  double get tierProgress => GamificationConstants.progressForScore(discoveryScore);
 
   /// Whether this user has no routes yet (true for brand-new users).
   bool get isNewUser =>

@@ -27,7 +27,9 @@ import { AppError } from "../error-handler.ts";
 
 const ANTHROPIC_API_URL = "https://api.anthropic.com/v1/messages";
 const ANTHROPIC_VERSION = "2023-06-01";
-const DEFAULT_TIMEOUT_MS = 30_000;
+// Claude Haiku is fast but still needs headroom for longer route prompts.
+// Raised to 90 s to match the Gemini and OpenAI clients.
+const DEFAULT_TIMEOUT_MS = 90_000;
 const MAX_RETRIES = 1;
 const RETRYABLE_STATUS_CODES = [429, 500, 503, 529];
 

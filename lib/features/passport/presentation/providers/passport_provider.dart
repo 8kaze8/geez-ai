@@ -163,18 +163,14 @@ class PassportNotifier extends AsyncNotifier<PassportState> {
     final passportRepo = ref.read(passportRepositoryProvider);
     final userRepo = ref.read(userRepositoryProvider);
 
-    // Run all independent requests concurrently.
-    final stampsFuture = passportRepo.getStamps(userId);
-    final placesFuture = passportRepo.getVisitedPlaces(userId);
-    final statsFuture = passportRepo.getStats(userId);
-    final personaFuture = userRepo.getPersona(userId);
-    final userFuture = userRepo.getUser(userId);
-
-    final stamps = await stampsFuture;
-    final visitedPlaces = await placesFuture;
-    final rawStats = await statsFuture;
-    final persona = await personaFuture;
-    final user = await userFuture;
+    // Run all independent requests concurrently using Dart 3 record .wait.
+    final (stamps, visitedPlaces, rawStats, persona, user) = await (
+      passportRepo.getStamps(userId),
+      passportRepo.getVisitedPlaces(userId),
+      passportRepo.getStats(userId),
+      userRepo.getPersona(userId),
+      userRepo.getUser(userId),
+    ).wait;
 
     final stats = PassportStats(
       cityCount: rawStats['city_count'] ?? 0,
