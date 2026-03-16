@@ -100,6 +100,41 @@ function calculateCost(llmResponse: LLMResponse): number {
 }
 
 // ---------------------------------------------------------------------------
+// JSON extraction helpers
+// ---------------------------------------------------------------------------
+
+/**
+ * Extracts a JSON object string from potentially messy LLM output.
+ *
+ * Handles: markdown fences, leading/trailing text, BOM characters.
+ * Falls back to returning the trimmed input if no extraction heuristic matches.
+ */
+function extractJson(raw: string): string {
+  let content = raw.trim();
+
+  // Strip BOM
+  if (content.charCodeAt(0) === 0xfeff) {
+    content = content.slice(1);
+  }
+
+  // Strip markdown fences (```json ... ``` or ``` ... ```)
+  if (content.startsWith("```")) {
+    content = content.replace(/^```(?:json)?\s*/, "").replace(/\s*```$/, "");
+  }
+
+  // If the content doesn't start with '{', try to find the first '{' and last '}'
+  if (!content.startsWith("{")) {
+    const firstBrace = content.indexOf("{");
+    const lastBrace = content.lastIndexOf("}");
+    if (firstBrace !== -1 && lastBrace > firstBrace) {
+      content = content.slice(firstBrace, lastBrace + 1);
+    }
+  }
+
+  return content.trim();
+}
+
+// ---------------------------------------------------------------------------
 // AI route generation
 // ---------------------------------------------------------------------------
 
@@ -115,6 +150,8 @@ interface LLMRouteOutput {
     stops: Array<{
       stopOrder: number;
       placeName: string;
+      latitude: number;
+      longitude: number;
       category: string;
       description: string;
       insiderTip: string;
@@ -141,8 +178,11 @@ interface LLMRouteOutput {
  */
 async function generateRouteWithAI(
   request: RouteRequest,
-  userContext?: UserContext | null
+  userContext?: UserContext | null,
+  _retryCount = 0
 ): Promise<{ response: Omit<RouteResponse, "routeId" | "createdAt">; llmResponse: LLMResponse }> {
+  const MAX_RETRIES = 1;
+
   // 1. Build prompts (with optional personalization context)
   const systemPrompt = buildSystemPrompt();
   const userPrompt = buildRoutePrompt(request, userContext);
@@ -154,23 +194,25 @@ async function generateRouteWithAI(
     messages: [{ role: "user", content: userPrompt }],
     jsonMode: true,
     temperature: 0.7,
-    maxTokens: 4000,
-    timeoutMs: 45_000,
+    maxTokens: 8192,
+    timeoutMs: 90_000,
   });
 
   // 3. Parse JSON response
   let parsed: LLMRouteOutput;
   try {
-    // Some models may wrap JSON in markdown fences -- strip them.
-    let content = llmResponse.content.trim();
-    if (content.startsWith("```")) {
-      content = content.replace(/^```(?:json)?\s*/, "").replace(/\s*```$/, "");
-    }
+    const content = extractJson(llmResponse.content);
     parsed = JSON.parse(content) as LLMRouteOutput;
   } catch {
+    if (_retryCount < MAX_RETRIES) {
+      console.warn(
+        `[generate-route] JSON parse failed (attempt ${_retryCount + 1}), retrying...`
+      );
+      return generateRouteWithAI(request, userContext, _retryCount + 1);
+    }
     throw new AppError(
       "AI_PARSE_ERROR",
-      "Failed to parse AI response as valid JSON.",
+      "Failed to parse AI response as valid JSON after retry.",
       502,
       { rawContent: llmResponse.content.substring(0, 500) }
     );
@@ -178,6 +220,12 @@ async function generateRouteWithAI(
 
   // 4. Basic structural validation
   if (!parsed.title || !Array.isArray(parsed.days) || parsed.days.length === 0) {
+    if (_retryCount < MAX_RETRIES) {
+      console.warn(
+        `[generate-route] Invalid structure (attempt ${_retryCount + 1}), retrying...`
+      );
+      return generateRouteWithAI(request, userContext, _retryCount + 1);
+    }
     throw new AppError(
       "AI_INVALID_STRUCTURE",
       "AI response is missing required fields (title, days).",
@@ -194,6 +242,8 @@ async function generateRouteWithAI(
       dayNumber: day.dayNumber,
       stopOrder: stop.stopOrder,
       placeName: stop.placeName,
+      latitude: stop.latitude,
+      longitude: stop.longitude,
       category: normalizeCategory(stop.category),
       description: stop.description,
       insiderTip: stop.insiderTip,
@@ -419,6 +469,20 @@ Deno.serve(
         "METHOD_NOT_ALLOWED",
         `Method ${req.method} is not allowed. Use POST.`,
         405
+      );
+    }
+
+    // -----------------------------------------------------------------------
+    // 2a. Content-Type validation
+    // -----------------------------------------------------------------------
+    const ct = req.headers.get("content-type") ?? "";
+    if (!ct.includes("application/json")) {
+      return new Response(
+        JSON.stringify({ error: "Content-Type must be application/json" }),
+        {
+          status: 415,
+          headers: { ...corsHeaders(origin), "Content-Type": "application/json" },
+        }
       );
     }
 

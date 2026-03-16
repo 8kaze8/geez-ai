@@ -81,12 +81,16 @@ export async function verifyAuth(
   req: Request,
   supabaseClient: SupabaseClient
 ): Promise<AuthResult> {
-  // Ensure the header is present and well-formed before hitting Auth.
-  extractBearerToken(req);
+  // Ensure the header is present and well-formed, then pass the token
+  // directly to getUser(). The Edge Function client is stateless
+  // (persistSession: false) so there is no internal session — getUser()
+  // without a token argument will always fail.
+  const token = extractBearerToken(req);
 
-  const { data, error } = await supabaseClient.auth.getUser();
+  const { data, error } = await supabaseClient.auth.getUser(token);
 
   if (error || !data.user) {
+    console.error("[auth] Token verification failed");
     throw new AppError(
       "UNAUTHORIZED",
       error?.message ?? "Invalid or expired authentication token.",

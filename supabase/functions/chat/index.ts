@@ -27,6 +27,11 @@ import { handleCors, corsHeaders } from "../_shared/cors.ts";
 import { createUserClient } from "../_shared/supabase-client.ts";
 import { verifyAuth } from "../_shared/auth.ts";
 import { routeToModel } from "../_shared/model-router.ts";
+import {
+  checkFrequencyLimit,
+  frequencyLimitResponse,
+} from "../_shared/rate-limit.ts";
+import { sanitizeUserInput } from "../_shared/sanitize.ts";
 import type { ChatMessage, RouteRequest } from "../_shared/types.ts";
 import type {
   ChatRequest,
@@ -478,6 +483,8 @@ Deno.serve(
     const corsResponse = handleCors(req);
     if (corsResponse) return corsResponse;
 
+    const origin = req.headers.get("Origin") ?? undefined;
+
     // --- Method check ---
     if (req.method !== "POST") {
       throw new AppError(
@@ -487,9 +494,27 @@ Deno.serve(
       );
     }
 
+    // --- Content-Type validation ---
+    const ct = req.headers.get("content-type") ?? "";
+    if (!ct.includes("application/json")) {
+      return new Response(
+        JSON.stringify({ error: "Content-Type must be application/json" }),
+        {
+          status: 415,
+          headers: { ...corsHeaders(origin), "Content-Type": "application/json" },
+        }
+      );
+    }
+
     // --- Authentication ---
     const userClient = createUserClient(req);
     const { userId } = await verifyAuth(req, userClient);
+
+    // --- Frequency rate limit (30 req/min per user) ---
+    if (!checkFrequencyLimit("chat", userId)) {
+      console.warn(`[chat] Frequency limit exceeded for userId=${userId}`);
+      return frequencyLimitResponse("chat", origin);
+    }
 
     // --- Parse and validate body ---
     let body: unknown;
@@ -504,13 +529,23 @@ Deno.serve(
     }
     const { messages, currentStep, language } = validateChatRequest(body);
 
+    // --- Sanitize last user message before it enters LLM prompts ---
+    const sanitizedMessages: ChatMessage[] = messages.map((msg, idx) => {
+      // Only sanitize the last user message; earlier turns are already
+      // validated and do not need re-processing.
+      if (msg.role === "user" && idx === messages.length - 1) {
+        return { ...msg, content: sanitizeUserInput(msg.content, 500) };
+      }
+      return msg;
+    });
+
     console.log(
       `[chat] userId=${userId} step=${currentStep} messages=${messages.length} lang=${language}`
     );
 
     // --- Generate AI response ---
     const response = await generateChatResponse(
-      messages,
+      sanitizedMessages,
       currentStep,
       language ?? "tr"
     );
@@ -520,7 +555,6 @@ Deno.serve(
     );
 
     // --- Return response ---
-    const origin = req.headers.get("Origin") ?? undefined;
     return new Response(JSON.stringify(response), {
       status: 200,
       headers: {

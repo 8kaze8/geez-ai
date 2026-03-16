@@ -1,7 +1,7 @@
 /// API endpoint paths and timeout constants.
 ///
-/// Supabase URL and keys are loaded from `.env` via `flutter_dotenv`
-/// in `main.dart`. This class only holds path suffixes and timeouts.
+/// Supabase URL and keys are injected at build time via `--dart-define`
+/// (see `lib/core/config/env.dart`). This class only holds path suffixes and timeouts.
 class ApiConstants {
   ApiConstants._();
 
