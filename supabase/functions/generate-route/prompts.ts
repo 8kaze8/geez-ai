@@ -11,6 +11,10 @@
  */
 
 import type { RouteRequest, UserContext } from "../_shared/types.ts";
+import {
+  sanitizeIdentifier,
+  sanitizeUserInput,
+} from "../_shared/sanitize.ts";
 
 // ---------------------------------------------------------------------------
 // Language label mapping
@@ -83,6 +87,8 @@ const OUTPUT_SCHEMA = `{
         {
           "stopOrder": "number — 1-indexed global position across ALL days",
           "placeName": "string — Official name of the place",
+          "latitude": "number — Approximate WGS-84 latitude in decimal degrees (e.g. 41.0082)",
+          "longitude": "number — Approximate WGS-84 longitude in decimal degrees (e.g. 28.9784)",
           "category": "string — One of: landmark, restaurant, cafe, museum, park, market, hidden_gem, viewpoint, religious, shopping, entertainment, other",
           "description": "string — 2-3 sentence engaging description of the place",
           "insiderTip": "string — A local insider tip that most tourists would not know",
@@ -123,6 +129,7 @@ Your core principles:
 6. Be conversational, surprising, and locally-informed in your descriptions.
 7. Always respect the user's transport mode when planning distances between stops.
 8. Provide realistic timing — include travel time between stops.
+9. For each stop, include approximate latitude and longitude coordinates (decimal degrees, WGS-84). Use your knowledge of real place locations — coordinates must be close to the actual location (within ~200 meters).
 
 Output format:
 - You MUST respond with valid JSON only — no markdown, no explanation, no wrapping.
@@ -308,6 +315,12 @@ export function buildRoutePrompt(
   request: RouteRequest,
   userContext?: UserContext | null
 ): string {
+  // Sanitize all user-supplied string fields before interpolation into the
+  // LLM prompt. This prevents prompt injection via city/country names or
+  // free-text preferences.
+  const safeCity = sanitizeIdentifier(request.city, 100);
+  const safeCountry = sanitizeIdentifier(request.country, 100);
+
   const lang = request.language ?? "tr";
   const langInfo = LANGUAGE_LABELS[lang] ?? LANGUAGE_LABELS["tr"];
   const styleDesc = STYLE_DESCRIPTIONS[request.travelStyle] ?? STYLE_DESCRIPTIONS["mixed"];
@@ -318,21 +331,23 @@ export function buildRoutePrompt(
 
   const preferencesBlock =
     request.preferences && request.preferences.length > 0
-      ? `\nAdditional user preferences:\n${request.preferences.map((p) => `- ${p}`).join("\n")}`
+      ? `\nAdditional user preferences:\n${request.preferences
+          .map((p) => `- ${sanitizeUserInput(p, 200)}`)
+          .join("\n")}`
       : "";
 
   // Personalization blocks (empty strings for new users / no context)
   const personalizationBlock = buildPersonalizationBlock(userContext ?? null);
   const alreadyVisitedBlock = buildAlreadyVisitedBlock(
     userContext ?? null,
-    request.city
+    safeCity
   );
 
-  return `Plan a ${request.durationDays}-day travel route in ${request.city}, ${request.country}.
+  return `Plan a ${request.durationDays}-day travel route in ${safeCity}, ${safeCountry}.
 
 === TRIP PARAMETERS ===
-- City: ${request.city}
-- Country: ${request.country}
+- City: ${safeCity}
+- Country: ${safeCountry}
 - Duration: ${request.durationDays} day(s)
 - Travel style: ${request.travelStyle} — ${styleDesc}
 - Transport: ${request.transportMode} — ${transportDesc}
@@ -356,6 +371,7 @@ Place names should remain in their original/local form (do not translate place n
 8. Each day should have a thematic coherence and geographic clustering.
 9. Include at least 1 hidden_gem category stop per day.
 10. entryFee should use the local currency symbol.
+11. Every stop MUST include latitude and longitude fields with approximate decimal coordinates for the real location. These are used for map display.
 
 === JSON SCHEMA ===
 Respond with ONLY this JSON structure (no markdown fences, no extra text):

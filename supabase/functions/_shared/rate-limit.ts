@@ -28,6 +28,125 @@ import { AppError } from "./error-handler.ts";
 import { corsHeaders } from "./cors.ts";
 
 // ---------------------------------------------------------------------------
+// In-memory sliding window rate limiter (per-request frequency throttling)
+// ---------------------------------------------------------------------------
+
+/**
+ * Configuration for a frequency throttle window.
+ *
+ * windowMs  — Rolling window duration in milliseconds.
+ * maxRequests — Maximum requests allowed within that window.
+ */
+interface FrequencyLimitConfig {
+  windowMs: number;
+  maxRequests: number;
+}
+
+/**
+ * Per-user request timestamps, keyed by "endpoint:userId".
+ *
+ * Stored in module-level memory so the state persists across requests
+ * within the same Deno isolate. Individual Deno isolates are ephemeral
+ * (they may be restarted by the runtime), so this is a best-effort guard,
+ * not a distributed lock. For production-grade cross-isolate limiting,
+ * replace with a Redis/Upstash check.
+ */
+const _requestLog = new Map<string, number[]>();
+
+/**
+ * Named endpoint configurations.
+ *
+ * Add new entries here when additional endpoints need frequency throttling.
+ * Keys match the names passed to checkFrequencyLimit().
+ */
+const ENDPOINT_CONFIGS: Record<string, FrequencyLimitConfig> = {
+  chat: { windowMs: 60_000, maxRequests: 30 },
+  "user-context": { windowMs: 60_000, maxRequests: 20 },
+};
+
+/**
+ * Checks whether a user has exceeded the per-minute request frequency for
+ * the given endpoint.
+ *
+ * Uses a sliding window algorithm: timestamps older than windowMs are pruned
+ * before the count is evaluated.
+ *
+ * @param endpoint - The endpoint name key (must exist in ENDPOINT_CONFIGS).
+ * @param userId   - The authenticated user's UUID.
+ * @returns `true` when the request is allowed, `false` when throttled.
+ * @throws Error if the endpoint name is unknown.
+ */
+export function checkFrequencyLimit(endpoint: string, userId: string): boolean {
+  const config = ENDPOINT_CONFIGS[endpoint];
+  if (!config) {
+    throw new Error(`Unknown endpoint for frequency limiting: ${endpoint}`);
+  }
+
+  const key = `${endpoint}:${userId}`;
+  const now = Date.now();
+  const windowStart = now - config.windowMs;
+
+  // Retrieve and prune stale timestamps
+  const timestamps = (_requestLog.get(key) ?? []).filter(
+    (t) => t > windowStart
+  );
+
+  if (timestamps.length >= config.maxRequests) {
+    // Over the limit — do NOT record this attempt
+    _requestLog.set(key, timestamps);
+    return false;
+  }
+
+  // Under the limit — record this timestamp and allow
+  timestamps.push(now);
+  _requestLog.set(key, timestamps);
+  return true;
+}
+
+/**
+ * Builds a 429 Too Many Requests response for per-minute frequency throttling.
+ *
+ * The Turkish message is the canonical user-facing copy used by both the
+ * chat and user-context endpoints. A Retry-After header is set to 60 s
+ * (the window duration) as a hint to the Flutter client.
+ *
+ * @param endpoint - Endpoint name, used to derive the human-readable limit.
+ * @param origin   - Optional Origin header value for CORS echoing.
+ * @returns A Response with status 429.
+ */
+export function frequencyLimitResponse(
+  endpoint: string,
+  origin?: string
+): Response {
+  const config = ENDPOINT_CONFIGS[endpoint];
+  const limit = config?.maxRequests ?? 0;
+  const windowSec = Math.round((config?.windowMs ?? 60_000) / 1000);
+
+  return new Response(
+    JSON.stringify({
+      error: {
+        code: "FREQUENCY_LIMIT_EXCEEDED",
+        message: `Cok fazla istek gonderdiniz. Lutfen ${windowSec} saniye bekleyip tekrar deneyin.`,
+        details: {
+          limit_per_window: limit,
+          window_seconds: windowSec,
+        },
+      },
+    }),
+    {
+      status: 429,
+      headers: {
+        ...corsHeaders(origin),
+        "Content-Type": "application/json",
+        "Retry-After": String(windowSec),
+        "X-RateLimit-Limit": String(limit),
+        "X-RateLimit-Window": String(windowSec),
+      },
+    }
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Constants
 // ---------------------------------------------------------------------------
 

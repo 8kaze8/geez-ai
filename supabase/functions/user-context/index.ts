@@ -35,6 +35,10 @@ import {
   createUserClient,
 } from "../_shared/supabase-client.ts";
 import { fetchUserContext } from "../_shared/user-context.ts";
+import {
+  checkFrequencyLimit,
+  frequencyLimitResponse,
+} from "../_shared/rate-limit.ts";
 
 // ---------------------------------------------------------------------------
 // Main handler
@@ -69,7 +73,17 @@ Deno.serve(
     const { userId } = await verifyAuth(req, userClient);
 
     // -----------------------------------------------------------------------
-    // 4. Fetch and assemble UserContext
+    // 4. Frequency rate limit (20 req/min per user)
+    // -----------------------------------------------------------------------
+    if (!checkFrequencyLimit("user-context", userId)) {
+      console.warn(
+        `[user-context] Frequency limit exceeded for userId=${userId}`
+      );
+      return frequencyLimitResponse("user-context", origin);
+    }
+
+    // -----------------------------------------------------------------------
+    // 5. Fetch and assemble UserContext
     // -----------------------------------------------------------------------
     console.info(
       `[user-context] Fetching context for user=${userId}`
@@ -88,7 +102,7 @@ Deno.serve(
     );
 
     // -----------------------------------------------------------------------
-    // 5. Return response
+    // 6. Return response
     // -----------------------------------------------------------------------
     return new Response(JSON.stringify(userContext), {
       status: 200,
