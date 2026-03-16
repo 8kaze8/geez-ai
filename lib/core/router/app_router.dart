@@ -29,7 +29,7 @@ const _publicRoutes = {
 };
 
 final routerProvider = Provider<GoRouter>((ref) {
-  final authState = ref.watch(authStateProvider);
+  final authState = ref.read(authStateProvider);
 
   return GoRouter(
     navigatorKey: _rootNavigatorKey,

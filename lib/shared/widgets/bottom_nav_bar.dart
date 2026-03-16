@@ -40,8 +40,8 @@ class BottomNavBar extends StatelessWidget {
                 onTap: () => _onTap(context, 0),
               ),
               _NavItem(
-                icon: Icons.explore_rounded,
-                label: 'Keşfet',
+                icon: Icons.route_rounded,
+                label: 'Rotalarım',
                 isSelected: currentIndex == 1,
                 onTap: () => _onTap(context, 1),
               ),

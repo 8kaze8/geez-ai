@@ -151,6 +151,8 @@ class _CollapsedHeader extends StatelessWidget {
               children: [
                 Text(
                   stop.placeName,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                   style: GeezTypography.body.copyWith(
                     color: isDark
                         ? GeezColors.textPrimaryDark
@@ -172,40 +174,47 @@ class _CollapsedHeader extends StatelessWidget {
           ),
 
           // Rating + entry fee
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              if (stop.googleRating != null)
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(Icons.star_rounded,
-                        size: 16, color: Color(0xFFFFC107)),
-                    const SizedBox(width: 2),
-                    Text(
-                      stop.googleRating!.toStringAsFixed(1),
-                      style: GeezTypography.bodySmall.copyWith(
-                        color: isDark
-                            ? GeezColors.textPrimaryDark
-                            : GeezColors.textPrimary,
-                        fontWeight: FontWeight.w600,
+          ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 80),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                if (stop.googleRating != null)
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.star_rounded,
+                          size: 16, color: Color(0xFFFFC107)),
+                      const SizedBox(width: 2),
+                      Text(
+                        stop.googleRating!.toStringAsFixed(1),
+                        style: GeezTypography.bodySmall.copyWith(
+                          color: isDark
+                              ? GeezColors.textPrimaryDark
+                              : GeezColors.textPrimary,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
+                const SizedBox(height: 2),
+                Text(
+                  _priceLabel(stop),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.end,
+                  style: GeezTypography.caption.copyWith(
+                    color:
+                        stop.entryFeeAmount == null || stop.entryFeeAmount == 0
+                            ? GeezColors.success
+                            : (isDark
+                                ? GeezColors.textSecondaryDark
+                                : GeezColors.textSecondary),
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
-              const SizedBox(height: 2),
-              Text(
-                _priceLabel(stop),
-                style: GeezTypography.caption.copyWith(
-                  color: stop.entryFeeAmount == null || stop.entryFeeAmount == 0
-                      ? GeezColors.success
-                      : (isDark
-                          ? GeezColors.textSecondaryDark
-                          : GeezColors.textSecondary),
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
 
           const SizedBox(width: 4),
@@ -224,11 +233,21 @@ class _CollapsedHeader extends StatelessWidget {
     );
   }
 
+  /// Strips the seconds component from a "HH:MM:SS" time string.
+  /// If the string is not in that format it is returned unchanged.
+  String _stripSeconds(String time) {
+    final parts = time.split(':');
+    if (parts.length == 3) return '${parts[0]}:${parts[1]}';
+    return time;
+  }
+
   String _timeRange(RouteStopModel stop) {
     final start = stop.suggestedStartTime;
     final end = stop.suggestedEndTime;
-    if (start != null && end != null) return '$start-$end';
-    if (start != null) return start;
+    if (start != null && end != null) {
+      return '${_stripSeconds(start)}-${_stripSeconds(end)}';
+    }
+    if (start != null) return _stripSeconds(start);
     final dur = stop.estimatedDurationMin;
     if (dur != null) return '$dur dk';
     return '';

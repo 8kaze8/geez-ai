@@ -22,9 +22,31 @@ class _RouteDetailScreenState extends ConsumerState<RouteDetailScreen> {
   int _selectedDay = 1;
 
   @override
+  void didUpdateWidget(RouteDetailScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Reset local state when navigating to a different route.
+    if (oldWidget.routeId != widget.routeId) {
+      _selectedDay = 1;
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final asyncData = ref.watch(routeDetailProvider(widget.routeId));
+
+    // Snap _selectedDay to the first day that has stops, in case the
+    // Edge Function did not generate stops for day 1.
+    asyncData.whenData((data) {
+      final populatedDays = data.days
+          .where((d) => data.stopsForDay(d).isNotEmpty)
+          .toList();
+      if (populatedDays.isNotEmpty && !populatedDays.contains(_selectedDay)) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) setState(() => _selectedDay = populatedDays.first);
+        });
+      }
+    });
 
     return Scaffold(
       backgroundColor:
@@ -69,7 +91,13 @@ class _LoadingBody extends StatelessWidget {
               isDark ? GeezColors.surfaceDark : GeezColors.surface,
           leading: IconButton(
             icon: _CircleIcon(icon: Icons.arrow_back_rounded),
-            onPressed: () => context.go(RoutePaths.home),
+            onPressed: () {
+              if (context.canPop()) {
+                context.pop();
+              } else {
+                context.go('/');
+              }
+            },
           ),
           flexibleSpace: FlexibleSpaceBar(
             background: _MapPlaceholder(isDark: isDark),
@@ -112,7 +140,13 @@ class _ErrorBody extends StatelessWidget {
               isDark ? GeezColors.surfaceDark : GeezColors.surface,
           leading: IconButton(
             icon: _CircleIcon(icon: Icons.arrow_back_rounded),
-            onPressed: () => context.go(RoutePaths.home),
+            onPressed: () {
+              if (context.canPop()) {
+                context.pop();
+              } else {
+                context.go('/');
+              }
+            },
           ),
           title: Text(
             'Rota',
@@ -211,7 +245,13 @@ class _RouteBody extends ConsumerWidget {
                 isDark ? GeezColors.surfaceDark : GeezColors.surface,
             leading: IconButton(
               icon: _CircleIcon(icon: Icons.arrow_back_rounded),
-              onPressed: () => context.go(RoutePaths.home),
+              onPressed: () {
+                if (context.canPop()) {
+                  context.pop();
+                } else {
+                  context.go('/');
+                }
+              },
             ),
             actions: [
               IconButton(
@@ -276,33 +316,63 @@ class _RouteBody extends ConsumerWidget {
               ),
             ),
 
-          // Bottom spacing
+          // Bottom spacing — must be tall enough to clear the FAB + safe area.
           const SliverToBoxAdapter(
-            child: SizedBox(height: GeezSpacing.xxl),
+            child: SizedBox(height: 108),
           ),
         ],
       ),
 
-      // "Rotayı Tamamla" FAB
-      floatingActionButton: currentDayStops.isNotEmpty &&
-              data.route.status != 'completed'
-          ? FloatingActionButton.extended(
-              onPressed: () async {
-                await ref
-                    .read(routeDetailProvider(routeId).notifier)
-                    .markAsCompleted();
-                if (context.mounted) {
-                  context.go(RoutePaths.home);
-                }
-              },
-              backgroundColor: GeezColors.primary,
-              foregroundColor: Colors.white,
-              icon: const Icon(Icons.check_rounded),
-              label: const Text(
-                'Rotayı Tamamla',
-                style: TextStyle(fontWeight: FontWeight.w600),
-              ),
-            )
+      // FAB: action button changes based on route status.
+      //   draft     → "Rotaya Başla"     (activate this route)
+      //   active    → "Rotayı Tamamla"   (complete the route)
+      //   completed → "Geri Bildirim Ver" (re-open feedback form)
+      floatingActionButton: currentDayStops.isNotEmpty
+          ? switch (data.route.status) {
+              'draft' => FloatingActionButton.extended(
+                  onPressed: () async {
+                    await ref
+                        .read(routeDetailProvider(routeId).notifier)
+                        .markAsActive();
+                  },
+                  backgroundColor: GeezColors.primary,
+                  foregroundColor: Colors.white,
+                  icon: const Icon(Icons.play_arrow_rounded),
+                  label: const Text(
+                    'Rotaya Başla',
+                    style: TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                ),
+              'active' => FloatingActionButton.extended(
+                  onPressed: () async {
+                    await ref
+                        .read(routeDetailProvider(routeId).notifier)
+                        .markAsCompleted();
+                    if (context.mounted) {
+                      context.go(RoutePaths.feedbackPath(routeId));
+                    }
+                  },
+                  backgroundColor: GeezColors.primary,
+                  foregroundColor: Colors.white,
+                  icon: const Icon(Icons.check_rounded),
+                  label: const Text(
+                    'Rotayı Tamamla',
+                    style: TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                ),
+              'completed' => FloatingActionButton.extended(
+                  onPressed: () =>
+                      context.go(RoutePaths.feedbackPath(routeId)),
+                  backgroundColor: GeezColors.secondary,
+                  foregroundColor: Colors.white,
+                  icon: const Icon(Icons.rate_review_rounded),
+                  label: const Text(
+                    'Geri Bildirim Ver',
+                    style: TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                ),
+              _ => null,
+            }
           : null,
     );
   }
@@ -427,6 +497,38 @@ class _RouteHeader extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Completion badge — only visible for completed routes.
+          if (route.status == 'completed') ...[
+            Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: GeezSpacing.sm + 2,
+                vertical: GeezSpacing.xs,
+              ),
+              decoration: BoxDecoration(
+                color: GeezColors.success.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(GeezRadius.chip),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(
+                    Icons.check_circle_rounded,
+                    size: 14,
+                    color: GeezColors.success,
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    'Tamamlandı',
+                    style: GeezTypography.caption.copyWith(
+                      color: GeezColors.success,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: GeezSpacing.sm),
+          ],
           Text(
             route.title,
             style: GeezTypography.h2.copyWith(
@@ -473,6 +575,7 @@ class _RouteHeader extends StatelessWidget {
       case 'yürüyüş':
         return '🚶';
       case 'transit':
+      case 'public':
       case 'toplu taşıma':
         return '🚌';
       case 'car':
@@ -491,6 +594,7 @@ class _RouteHeader extends StatelessWidget {
       case 'walking':
         return 'Yürüyüş';
       case 'transit':
+      case 'public':
         return 'Toplu Taşıma';
       case 'car':
         return 'Araç';
