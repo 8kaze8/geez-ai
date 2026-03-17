@@ -44,11 +44,21 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+# MCP & Playwright
 .mcp.json
+.playwright-mcp/
 
 # Claude Code
 .claude/
 CLAUDE.md
+project-memory.md
+
+# Supabase temp
+supabase/.temp/
+
+# iOS build artifacts
+ios/build/
+**/ios/Flutter/*.podspec
 
 # Memory
 memory/

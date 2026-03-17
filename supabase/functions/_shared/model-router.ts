@@ -10,10 +10,15 @@
  * Tiered strategy:
  *   route_generation   → Gemini 2.5 Flash → GPT-4.1-mini  → Claude Haiku
  *   content_enrichment → Gemini 2.5 Flash → GPT-4.1-mini  → Claude Haiku
- *   review_synthesis   → GPT-4.1-mini     → Gemini Flash   → Claude Haiku
- *   place_ranking      → GPT-4.1-mini     → Gemini Flash   → Claude Haiku
- *   qa_flow            → GPT-4.1-nano     → GPT-4.1-mini   → Gemini Flash
- *   memory_update      → GPT-4.1-nano     → GPT-4.1-mini   → Gemini Flash
+ *   review_synthesis   → Gemini 2.5 Flash → GPT-4.1-mini  → Claude Haiku
+ *   place_ranking      → Gemini 2.5 Flash → GPT-4.1-mini  → Claude Haiku
+ *   qa_flow            → Gemini 2.5 Flash → GPT-4.1-nano  → GPT-4.1-mini
+ *   memory_update      → Gemini 2.5 Flash → GPT-4.1-nano  → GPT-4.1-mini
+ *
+ * NOTE: Gemini is the primary for all chains because it is the only provider
+ * with a configured API key in Supabase secrets. OpenAI and Anthropic steps
+ * are present for future use but are skipped automatically at runtime when
+ * their respective API key env vars are absent.
  *
  * Usage:
  *   import { routeToModel } from '../_shared/model-router.ts';
@@ -132,10 +137,10 @@ const CLAUDE_HAIKU: ModelStep = {
 const FALLBACK_CHAINS: Record<TaskType, ModelStep[]> = {
   route_generation: [GEMINI_FLASH, GPT_41_MINI, CLAUDE_HAIKU],
   content_enrichment: [GEMINI_FLASH, GPT_41_MINI, CLAUDE_HAIKU],
-  review_synthesis: [GPT_41_MINI, GEMINI_FLASH, CLAUDE_HAIKU],
-  place_ranking: [GPT_41_MINI, GEMINI_FLASH, CLAUDE_HAIKU],
-  qa_flow: [GPT_41_NANO, GPT_41_MINI, GEMINI_FLASH],
-  memory_update: [GPT_41_NANO, GPT_41_MINI, GEMINI_FLASH],
+  review_synthesis: [GEMINI_FLASH, GPT_41_MINI, CLAUDE_HAIKU],
+  place_ranking: [GEMINI_FLASH, GPT_41_MINI, CLAUDE_HAIKU],
+  qa_flow: [GEMINI_FLASH, GPT_41_NANO, GPT_41_MINI],
+  memory_update: [GEMINI_FLASH, GPT_41_NANO, GPT_41_MINI],
 };
 
 // ---------------------------------------------------------------------------
@@ -212,12 +217,37 @@ async function callAnthropic(
 }
 
 /**
+ * Maps each provider to the environment variable name that holds its API key.
+ * Used to perform a fast availability check before attempting a call, so that
+ * a missing key causes an immediate skip rather than a slow network timeout.
+ */
+const PROVIDER_KEY_ENV: Record<LLMProvider, string> = {
+  gemini: "GEMINI_API_KEY",
+  openai: "OPENAI_API_KEY",
+  anthropic: "ANTHROPIC_API_KEY",
+};
+
+/**
  * Dispatches a request to the correct provider based on the ModelStep.
+ *
+ * Throws immediately with a descriptive error when the provider's API key
+ * env var is not set, so the fallback chain skips it without a network round-trip.
  */
 async function dispatchToProvider(
   step: ModelStep,
   request: LLMRequest
 ): Promise<{ content: string; model: string; usage: { inputTokens: number; outputTokens: number } }> {
+  // Fast-fail if the required API key is absent — avoids a slow network timeout
+  // and keeps the fallback chain latency low.
+  const keyEnvVar = PROVIDER_KEY_ENV[step.provider];
+  if (keyEnvVar && !Deno.env.get(keyEnvVar)) {
+    throw new AppError(
+      "MISSING_ENV_VAR",
+      `Skipping ${step.provider}/${step.model}: env var "${keyEnvVar}" is not set.`,
+      500
+    );
+  }
+
   switch (step.provider) {
     case "gemini":
       return callGemini(request);

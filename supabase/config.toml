@@ -1,9 +1,6 @@
 # Geez AI - Supabase Configuration
 # https://supabase.com/docs/guides/cli/config
 
-[project]
-id = "geez-ai"
-
 [api]
 enabled = true
 port = 54321
