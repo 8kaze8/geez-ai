@@ -316,64 +316,96 @@ class _RouteBody extends ConsumerWidget {
               ),
             ),
 
-          // Bottom spacing — must be tall enough to clear the FAB + safe area.
+          // Bottom spacing
           const SliverToBoxAdapter(
-            child: SizedBox(height: 108),
+            child: SizedBox(height: GeezSpacing.lg),
           ),
         ],
       ),
 
-      // FAB: action button changes based on route status.
-      //   draft     → "Rotaya Başla"     (activate this route)
-      //   active    → "Rotayı Tamamla"   (complete the route)
-      //   completed → "Geri Bildirim Ver" (re-open feedback form)
-      floatingActionButton: currentDayStops.isNotEmpty
-          ? switch (data.route.status) {
-              'draft' => FloatingActionButton.extended(
-                  onPressed: () async {
-                    await ref
-                        .read(routeDetailProvider(routeId).notifier)
-                        .markAsActive();
-                  },
-                  backgroundColor: GeezColors.primary,
-                  foregroundColor: Colors.white,
-                  icon: const Icon(Icons.play_arrow_rounded),
-                  label: const Text(
-                    'Rotaya Başla',
-                    style: TextStyle(fontWeight: FontWeight.w600),
-                  ),
-                ),
-              'active' => FloatingActionButton.extended(
-                  onPressed: () async {
-                    await ref
-                        .read(routeDetailProvider(routeId).notifier)
-                        .markAsCompleted();
-                    if (context.mounted) {
-                      context.go(RoutePaths.feedbackPath(routeId));
-                    }
-                  },
-                  backgroundColor: GeezColors.primary,
-                  foregroundColor: Colors.white,
-                  icon: const Icon(Icons.check_rounded),
-                  label: const Text(
-                    'Rotayı Tamamla',
-                    style: TextStyle(fontWeight: FontWeight.w600),
-                  ),
-                ),
-              'completed' => FloatingActionButton.extended(
-                  onPressed: () =>
-                      context.go(RoutePaths.feedbackPath(routeId)),
-                  backgroundColor: GeezColors.secondary,
-                  foregroundColor: Colors.white,
-                  icon: const Icon(Icons.rate_review_rounded),
-                  label: const Text(
-                    'Geri Bildirim Ver',
-                    style: TextStyle(fontWeight: FontWeight.w600),
-                  ),
-                ),
-              _ => null,
-            }
+      // Bottom action bar — pinned above safe area
+      bottomNavigationBar: currentDayStops.isNotEmpty
+          ? _buildBottomAction(context, ref, data.route.status)
           : null,
+    );
+  }
+
+  Widget? _buildBottomAction(
+      BuildContext context, WidgetRef ref, String status) {
+    final (icon, label, color, onTap) = switch (status) {
+      'draft' => (
+          Icons.play_arrow_rounded,
+          'Rotaya Başla',
+          GeezColors.primary,
+          () async {
+            await ref
+                .read(routeDetailProvider(routeId).notifier)
+                .markAsActive();
+          },
+        ),
+      'active' => (
+          Icons.check_rounded,
+          'Rotayı Tamamla',
+          GeezColors.primary,
+          () async {
+            await ref
+                .read(routeDetailProvider(routeId).notifier)
+                .markAsCompleted();
+            if (context.mounted) {
+              context.go(RoutePaths.feedbackPath(routeId));
+            }
+          },
+        ),
+      'completed' => (
+          Icons.rate_review_rounded,
+          'Geri Bildirim Ver',
+          GeezColors.secondary,
+          () => context.go(RoutePaths.feedbackPath(routeId)),
+        ),
+      _ => (null, null, null, null),
+    };
+
+    if (label == null) return null;
+
+    return Container(
+      padding: EdgeInsets.fromLTRB(
+        GeezSpacing.md,
+        GeezSpacing.sm,
+        GeezSpacing.md,
+        MediaQuery.of(context).padding.bottom + GeezSpacing.sm,
+      ),
+      decoration: BoxDecoration(
+        color: isDark ? GeezColors.surfaceDark : GeezColors.surface,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.08),
+            blurRadius: 12,
+            offset: const Offset(0, -2),
+          ),
+        ],
+      ),
+      child: SizedBox(
+        width: double.infinity,
+        height: 52,
+        child: FilledButton.icon(
+          onPressed: onTap,
+          style: FilledButton.styleFrom(
+            backgroundColor: color,
+            foregroundColor: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(14),
+            ),
+          ),
+          icon: Icon(icon),
+          label: Text(
+            label,
+            style: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
