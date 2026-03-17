@@ -65,58 +65,63 @@ class _GeezChipState extends State<GeezChip>
         ? GeezColors.borderMutedDark
         : GeezColors.borderMutedLight;
 
-    return ScaleTransition(
-      scale: _scaleAnimation,
-      child: GestureDetector(
-        onTap: _handleTap,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          curve: Curves.easeInOut,
-          padding: const EdgeInsets.symmetric(
-            horizontal: GeezSpacing.md,
-            vertical: GeezSpacing.sm,
-          ),
-          decoration: BoxDecoration(
-            color: widget.isSelected
-                ? GeezColors.primary
-                : Colors.transparent,
-            borderRadius: BorderRadius.circular(GeezRadius.chip),
-            border: Border.all(
+    return Semantics(
+      label: widget.label,
+      button: true,
+      selected: widget.isSelected,
+      child: ScaleTransition(
+        scale: _scaleAnimation,
+        child: GestureDetector(
+          onTap: _handleTap,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            curve: Curves.easeInOut,
+            padding: const EdgeInsets.symmetric(
+              horizontal: GeezSpacing.md,
+              vertical: GeezSpacing.sm,
+            ),
+            decoration: BoxDecoration(
               color: widget.isSelected
                   ? GeezColors.primary
-                  : mutedBorderColor,
-              width: 1.5,
-            ),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (widget.icon != null) ...[
-                Icon(
-                  widget.icon,
-                  size: 18,
-                  color: widget.isSelected
-                      ? Colors.white
-                      : isDark
-                          ? GeezColors.textPrimaryDark
-                          : GeezColors.textPrimary,
-                ),
-                const SizedBox(width: GeezSpacing.sm),
-              ],
-              Text(
-                widget.label,
-                style: GeezTypography.bodySmall.copyWith(
-                  color: widget.isSelected
-                      ? Colors.white
-                      : isDark
-                          ? GeezColors.textPrimaryDark
-                          : GeezColors.textPrimary,
-                  fontWeight: widget.isSelected
-                      ? FontWeight.w600
-                      : FontWeight.normal,
-                ),
+                  : Colors.transparent,
+              borderRadius: BorderRadius.circular(GeezRadius.chip),
+              border: Border.all(
+                color: widget.isSelected
+                    ? GeezColors.primary
+                    : mutedBorderColor,
+                width: 1.5,
               ),
-            ],
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (widget.icon != null) ...[
+                  Icon(
+                    widget.icon,
+                    size: 18,
+                    color: widget.isSelected
+                        ? Colors.white
+                        : isDark
+                            ? GeezColors.textPrimaryDark
+                            : GeezColors.textPrimary,
+                  ),
+                  const SizedBox(width: GeezSpacing.sm),
+                ],
+                Text(
+                  widget.label,
+                  style: GeezTypography.bodySmall.copyWith(
+                    color: widget.isSelected
+                        ? Colors.white
+                        : isDark
+                            ? GeezColors.textPrimaryDark
+                            : GeezColors.textPrimary,
+                    fontWeight: widget.isSelected
+                        ? FontWeight.w600
+                        : FontWeight.normal,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),

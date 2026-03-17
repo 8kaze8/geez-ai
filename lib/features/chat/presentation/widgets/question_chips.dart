@@ -122,59 +122,64 @@ class _QuestionChipsState extends State<QuestionChips>
                       ? '${option.emoji} ${option.label}'
                       : option.label;
 
-                  return GestureDetector(
-                    onTap: _selected == null
-                        ? () {
-                            setState(() => _selected = option.label);
-                            widget.onSelected(option.label);
-                          }
-                        : null,
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 200),
-                      curve: Curves.easeInOut,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 14,
-                        vertical: 10,
-                      ),
-                      decoration: BoxDecoration(
-                        color: isSelected
-                            ? GeezColors.primary
-                            : _selected != null
-                                ? (isDark
-                                    ? GeezColors.surfaceVariantDark
-                                    : GeezColors.surfaceVariant)
-                                : (isDark
-                                    ? GeezColors.surfaceVariantDark
-                                    : Colors.white),
-                        borderRadius:
-                            BorderRadius.circular(GeezRadius.chip),
-                        border: Border.all(
+                  return Semantics(
+                    label: displayLabel,
+                    button: true,
+                    selected: isSelected,
+                    child: GestureDetector(
+                      onTap: _selected == null
+                          ? () {
+                              setState(() => _selected = option.label);
+                              widget.onSelected(option.label);
+                            }
+                          : null,
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        curve: Curves.easeInOut,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 10,
+                        ),
+                        decoration: BoxDecoration(
                           color: isSelected
                               ? GeezColors.primary
                               : _selected != null
                                   ? (isDark
-                                      ? GeezColors.borderDark
-                                      : GeezColors.borderMutedLight)
-                                  : GeezColors.primary
-                                      .withValues(alpha: 0.4),
-                          width: 1.5,
-                        ),
-                      ),
-                      child: Text(
-                        displayLabel,
-                        style: GeezTypography.bodySmall.copyWith(
-                          color: isSelected
-                              ? Colors.white
-                              : _selected != null
-                                  ? (isDark
-                                      ? GeezColors.textSecondaryDark
-                                      : GeezColors.textSecondary)
+                                      ? GeezColors.surfaceVariantDark
+                                      : GeezColors.surfaceVariant)
                                   : (isDark
-                                      ? GeezColors.textPrimaryDark
-                                      : GeezColors.textPrimary),
-                          fontWeight: isSelected
-                              ? FontWeight.w600
-                              : FontWeight.w500,
+                                      ? GeezColors.surfaceVariantDark
+                                      : Colors.white),
+                          borderRadius:
+                              BorderRadius.circular(GeezRadius.chip),
+                          border: Border.all(
+                            color: isSelected
+                                ? GeezColors.primary
+                                : _selected != null
+                                    ? (isDark
+                                        ? GeezColors.borderDark
+                                        : GeezColors.borderMutedLight)
+                                    : GeezColors.primary
+                                        .withValues(alpha: 0.4),
+                            width: 1.5,
+                          ),
+                        ),
+                        child: Text(
+                          displayLabel,
+                          style: GeezTypography.bodySmall.copyWith(
+                            color: isSelected
+                                ? Colors.white
+                                : _selected != null
+                                    ? (isDark
+                                        ? GeezColors.textSecondaryDark
+                                        : GeezColors.textSecondary)
+                                    : (isDark
+                                        ? GeezColors.textPrimaryDark
+                                        : GeezColors.textPrimary),
+                            fontWeight: isSelected
+                                ? FontWeight.w600
+                                : FontWeight.w500,
+                          ),
                         ),
                       ),
                     ),

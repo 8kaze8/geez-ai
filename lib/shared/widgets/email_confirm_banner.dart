@@ -145,28 +145,34 @@ class _BannerContent extends ConsumerWidget {
                 ],
                 if (!resend.sent) ...[
                   const SizedBox(height: GeezSpacing.sm),
-                  GestureDetector(
-                    onTap: resend.sending ? null : () => _resend(ref),
-                    child: resend.sending
-                        ? const SizedBox(
-                            width: 14,
-                            height: 14,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 1.5,
-                              valueColor: AlwaysStoppedAnimation<Color>(
-                                GeezColors.warning,
+                  Semantics(
+                    label: resend.sending
+                        ? 'Doğrulama e-postası gönderiliyor'
+                        : 'Doğrulama e-postasını tekrar gönder',
+                    button: true,
+                    child: GestureDetector(
+                      onTap: resend.sending ? null : () => _resend(ref),
+                      child: resend.sending
+                          ? const SizedBox(
+                              width: 14,
+                              height: 14,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 1.5,
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  GeezColors.warning,
+                                ),
+                              ),
+                            )
+                          : Text(
+                              'Tekrar Gönder',
+                              style: GeezTypography.caption.copyWith(
+                                color: resendColor,
+                                fontWeight: FontWeight.w600,
+                                decoration: TextDecoration.underline,
+                                decorationColor: resendColor,
                               ),
                             ),
-                          )
-                        : Text(
-                            'Tekrar Gönder',
-                            style: GeezTypography.caption.copyWith(
-                              color: resendColor,
-                              fontWeight: FontWeight.w600,
-                              decoration: TextDecoration.underline,
-                              decorationColor: resendColor,
-                            ),
-                          ),
+                    ),
                   ),
                 ],
               ],
@@ -174,15 +180,22 @@ class _BannerContent extends ConsumerWidget {
           ),
 
           // Dismiss button
-          GestureDetector(
-            onTap: () =>
-                ref.read(emailBannerDismissedProvider.notifier).state = true,
-            child: Padding(
-              padding: const EdgeInsets.only(left: GeezSpacing.sm),
-              child: Icon(
-                Icons.close_rounded,
-                size: 18,
-                color: mutedColor,
+          Semantics(
+            label: 'Bildirimi kapat',
+            button: true,
+            child: GestureDetector(
+              onTap: () =>
+                  ref.read(emailBannerDismissedProvider.notifier).state = true,
+              child: SizedBox(
+                width: 48,
+                height: 48,
+                child: Center(
+                  child: Icon(
+                    Icons.close_rounded,
+                    size: 18,
+                    color: mutedColor,
+                  ),
+                ),
               ),
             ),
           ),
