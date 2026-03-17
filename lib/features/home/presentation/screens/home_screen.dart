@@ -148,7 +148,7 @@ class _HomeErrorState extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text('\u{1F4F5}', style: TextStyle(fontSize: 48)),
+            const Icon(Icons.wifi_off_rounded, size: 48, color: GeezColors.textSecondary),
             const SizedBox(height: GeezSpacing.md),
             Text(
               'Bir sorun oluştu',
@@ -601,7 +601,7 @@ class _WelcomeBanner extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('\u{1F30D}', style: TextStyle(fontSize: 36)),
+          const Icon(Icons.public_rounded, size: 36, color: GeezColors.primary),
           const SizedBox(height: GeezSpacing.sm),
           Text(
             'İlk rotanı oluştur!',

@@ -9,14 +9,14 @@ import 'package:geez_ai/core/theme/typography.dart';
 
 class PersonaCategory {
   const PersonaCategory({
-    required this.emoji,
+    required this.icon,
     required this.name,
     required this.level,
     required this.progress,
     required this.color,
   });
 
-  final String emoji;
+  final IconData icon;
   final String name;
   final int level;
   final double progress;
@@ -81,7 +81,7 @@ class _PersonaBarState extends State<PersonaBar>
           // Label row: emoji + name + level badge + percentage
           Row(
             children: [
-              Text(cat.emoji, style: const TextStyle(fontSize: 18)),
+              Icon(cat.icon, size: 18, color: cat.color),
               const SizedBox(width: GeezSpacing.sm),
               Expanded(
                 child: Text(
@@ -159,35 +159,35 @@ List<PersonaCategory> personaCategoriesFromLevels({
 }) {
   return [
     PersonaCategory(
-      emoji: '\u{1F355}',
+      icon: Icons.restaurant_rounded,
       name: 'Gurme',
       level: foodieLevel,
       progress: _levelProgress(foodieLevel),
       color: GeezColors.foodie,
     ),
     PersonaCategory(
-      emoji: '\u{1F3DB}',
+      icon: Icons.account_balance_rounded,
       name: 'Tarih Sever',
       level: historyBuffLevel,
       progress: _levelProgress(historyBuffLevel),
       color: GeezColors.history,
     ),
     PersonaCategory(
-      emoji: '\u{1F392}',
+      icon: Icons.hiking_rounded,
       name: 'Maceraperest',
       level: adventureSeekerLevel,
       progress: _levelProgress(adventureSeekerLevel),
       color: GeezColors.adventure,
     ),
     PersonaCategory(
-      emoji: '\u{1F3A8}',
+      icon: Icons.palette_rounded,
       name: 'Kültür',
       level: cultureExplorerLevel,
       progress: _levelProgress(cultureExplorerLevel),
       color: GeezColors.culture,
     ),
     PersonaCategory(
-      emoji: '\u{1F33F}',
+      icon: Icons.park_rounded,
       name: 'Doğa Sever',
       level: natureLoverLevel,
       progress: _levelProgress(natureLoverLevel),

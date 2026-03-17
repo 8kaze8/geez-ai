@@ -213,9 +213,10 @@ class _FormBody extends ConsumerWidget {
                 if (formState.overallRating > 0) ...[
                   const SizedBox(height: GeezSpacing.sm),
                   Center(
-                    child: Text(
-                      _emojiForRating(formState.overallRating),
-                      style: const TextStyle(fontSize: 32),
+                    child: Icon(
+                      _iconForRating(formState.overallRating),
+                      size: 32,
+                      color: _colorForRating(formState.overallRating),
                     ),
                   ),
                 ],
@@ -839,13 +840,24 @@ const _kLowlightOptions = [
 // Emoji helper
 // ---------------------------------------------------------------------------
 
-String _emojiForRating(int rating) {
+IconData _iconForRating(int rating) {
   return switch (rating) {
-    1 => '😞',
-    2 => '😐',
-    3 => '🙂',
-    4 => '😊',
-    5 => '🤩',
-    _ => '',
+    1 => Icons.sentiment_very_dissatisfied_rounded,
+    2 => Icons.sentiment_dissatisfied_rounded,
+    3 => Icons.sentiment_neutral_rounded,
+    4 => Icons.sentiment_satisfied_rounded,
+    5 => Icons.sentiment_very_satisfied_rounded,
+    _ => Icons.circle_outlined,
+  };
+}
+
+Color _colorForRating(int rating) {
+  return switch (rating) {
+    1 => GeezColors.error,
+    2 => GeezColors.warning,
+    3 => GeezColors.textSecondary,
+    4 => GeezColors.success,
+    5 => GeezColors.primary,
+    _ => GeezColors.textSecondary,
   };
 }

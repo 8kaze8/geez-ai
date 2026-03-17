@@ -38,31 +38,31 @@ class OnboardingState {
     return [
       PersonaTrait(
         name: 'Foodie',
-        emoji: '🍕',
+        emoji: '',
         level: 1,
         isActive: _hasStyle('Yemek Turu') || _hasStyle('Karma'),
       ),
       PersonaTrait(
         name: 'History',
-        emoji: '🏛️',
+        emoji: '',
         level: 1,
         isActive: _hasStyle('Tarihi Keşif') || _hasStyle('Karma'),
       ),
       PersonaTrait(
         name: 'Adventure',
-        emoji: '🎒',
+        emoji: '',
         level: 1,
         isActive: _hasStyle('Macera') || _hasStyle('Karma'),
       ),
       PersonaTrait(
         name: 'Culture',
-        emoji: '🎨',
+        emoji: '',
         level: 1,
         isActive: _hasStyle('Tarihi Keşif') || _hasStyle('Karma'),
       ),
       PersonaTrait(
         name: 'Nature',
-        emoji: '🌿',
+        emoji: '',
         level: 1,
         isActive: _hasStyle('Doğa') || _hasStyle('Karma'),
       ),

@@ -111,7 +111,7 @@ class ChatNotifier extends StateNotifier<ChatState> {
           : '$existing; $trimmed';
 
       final noteConfirm = ChatMessageModel.assistant(
-        'Notunu aldım, rota oluştururken dikkate alacağım! 👍',
+        'Notunu aldım, rota oluştururken dikkate alacağım!',
       );
       state = state.copyWith(
         messages: [...state.messages, userMessage, noteConfirm],
@@ -168,7 +168,7 @@ class ChatNotifier extends StateNotifier<ChatState> {
   /// Bootstraps the conversation with the opening assistant greeting without
   /// making a real network call — keeps the welcome instant.
   void _sendWelcome() {
-    const greeting = 'Merhaba! Ben Geez, seyahat asistanın. ✈️\n\n'
+    const greeting = 'Merhaba! Ben Geez, seyahat asistanın.\n\n'
         'Sana özel bir rota hazırlamam için birkaç soru soracağım. '
         'Hadi başlayalım!\n\nNereye gitmek istiyorsun?';
     state = state.copyWith(

@@ -24,7 +24,7 @@ class StampCard extends StatelessWidget {
 
   Widget _buildCompletedStamp(bool isDark, PassportStampModel s) {
     final bgColor = isDark ? GeezColors.surfaceDark : GeezColors.surface;
-    final flag = _countryCodeToFlag(s.countryCode);
+    final countryLabel = (s.countryCode ?? '').toUpperCase();
     // Format date as M/YY from the stamp_date yyyy-MM-dd string.
     final dateLabel = _formatDate(s.stampDate);
 
@@ -47,9 +47,20 @@ class StampCard extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text(
-            flag,
-            style: const TextStyle(fontSize: 28),
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: GeezColors.primary.withValues(alpha: 0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Center(
+              child: Icon(
+                Icons.location_on_rounded,
+                size: 20,
+                color: GeezColors.primary,
+              ),
+            ),
           ),
           const SizedBox(height: GeezSpacing.xs),
           Text(
@@ -59,6 +70,17 @@ class StampCard extends StatelessWidget {
               letterSpacing: 1.5,
             ),
           ),
+          if (countryLabel.isNotEmpty) ...[
+            const SizedBox(height: 1),
+            Text(
+              countryLabel,
+              style: GeezTypography.caption.copyWith(
+                color: GeezColors.textSecondary,
+                fontSize: 9,
+                letterSpacing: 1.0,
+              ),
+            ),
+          ],
           const SizedBox(height: 2),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -95,12 +117,10 @@ class StampCard extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text(
-            '\u{2753}',
-            style: TextStyle(
-              fontSize: 28,
-              color: Colors.grey.withValues(alpha: 0.5),
-            ),
+          Icon(
+            Icons.help_outline_rounded,
+            size: 28,
+            color: Colors.grey.withValues(alpha: 0.5),
           ),
           const SizedBox(height: GeezSpacing.xs),
           Text(
@@ -125,16 +145,6 @@ class StampCard extends StatelessWidget {
   // ---------------------------------------------------------------------------
   // Helpers
   // ---------------------------------------------------------------------------
-
-  /// Converts an ISO 3166-1 alpha-2 country code (e.g. "TR") to a flag emoji.
-  /// Falls back to a globe emoji when the code is null or invalid.
-  static String _countryCodeToFlag(String? code) {
-    if (code == null || code.length != 2) return '\u{1F310}';
-    final upper = code.toUpperCase();
-    final first = upper.codeUnitAt(0) - 0x41 + 0x1F1E6;
-    final second = upper.codeUnitAt(1) - 0x41 + 0x1F1E6;
-    return String.fromCharCode(first) + String.fromCharCode(second);
-  }
 
   /// Returns the first three characters of [city] uppercased — acts as the
   /// IATA-style city code shown on the stamp (e.g. "Istanbul" → "IST").

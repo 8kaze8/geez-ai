@@ -36,14 +36,14 @@ class PassportStats {
 
 class PersonaLevel {
   const PersonaLevel({
-    required this.emoji,
+    required this.icon,
     required this.name,
     required this.level,
     required this.progress,
     required this.color,
   });
 
-  final String emoji;
+  final IconData icon;
   final String name;
   final int level;
 
@@ -78,36 +78,36 @@ class PassportState {
     if (persona == null) return [];
     return [
       PersonaLevel(
-        emoji: '\u{1F355}',
-        name: 'Foodie',
+        icon: Icons.restaurant_rounded,
+        name: 'Gurme',
         level: persona!.foodieLevel,
         progress: _levelProgress(persona!.foodieLevel),
         color: GeezColors.foodie,
       ),
       PersonaLevel(
-        emoji: '\u{1F3DB}',
-        name: 'History Buff',
+        icon: Icons.account_balance_rounded,
+        name: 'Tarih Sever',
         level: persona!.historyBuffLevel,
         progress: _levelProgress(persona!.historyBuffLevel),
         color: GeezColors.history,
       ),
       PersonaLevel(
-        emoji: '\u{1F392}',
-        name: 'Adventure',
+        icon: Icons.hiking_rounded,
+        name: 'Maceraperest',
         level: persona!.adventureSeekerLevel,
         progress: _levelProgress(persona!.adventureSeekerLevel),
         color: GeezColors.adventure,
       ),
       PersonaLevel(
-        emoji: '\u{1F3A8}',
-        name: 'Culture',
+        icon: Icons.palette_rounded,
+        name: 'Kültür',
         level: persona!.cultureExplorerLevel,
         progress: _levelProgress(persona!.cultureExplorerLevel),
         color: GeezColors.culture,
       ),
       PersonaLevel(
-        emoji: '\u{1F33F}',
-        name: 'Nature',
+        icon: Icons.park_rounded,
+        name: 'Doğa Sever',
         level: persona!.natureLoverLevel,
         progress: _levelProgress(persona!.natureLoverLevel),
         color: GeezColors.nature,

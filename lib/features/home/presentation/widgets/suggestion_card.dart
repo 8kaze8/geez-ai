@@ -11,13 +11,13 @@ class HomeSuggestion {
   const HomeSuggestion({
     required this.city,
     required this.country,
-    required this.flag,
+    required this.icon,
     required this.reason,
   });
 
   final String city;
   final String country;
-  final String flag;
+  final IconData icon;
   final String reason;
 }
 
@@ -30,19 +30,19 @@ const List<HomeSuggestion> kSampleSuggestions = [
   HomeSuggestion(
     city: 'Roma',
     country: 'Italya',
-    flag: '\u{1F1EE}\u{1F1F9}',
+    icon: Icons.account_balance_rounded,
     reason: 'Tarih sever olarak kaçırma',
   ),
   HomeSuggestion(
     city: 'Atina',
     country: 'Yunanistan',
-    flag: '\u{1F1EC}\u{1F1F7}',
+    icon: Icons.temple_buddhist_rounded,
     reason: 'Açık hava + antik kalıntılar',
   ),
   HomeSuggestion(
     city: 'Barselona',
     country: 'Ispanya',
-    flag: '\u{1F1EA}\u{1F1F8}',
+    icon: Icons.restaurant_rounded,
     reason: 'Gaudi + street food cenneti',
   ),
 ];
@@ -98,9 +98,10 @@ class SuggestionCard extends StatelessWidget {
                       ),
                     ),
                     child: Center(
-                      child: Text(
-                        suggestion.flag,
-                        style: const TextStyle(fontSize: 40),
+                      child: Icon(
+                        suggestion.icon,
+                        size: 40,
+                        color: Colors.white.withValues(alpha: 0.7),
                       ),
                     ),
                   ),

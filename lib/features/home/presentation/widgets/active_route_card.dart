@@ -57,9 +57,10 @@ class ActiveRouteCard extends StatelessWidget {
                     color: GeezColors.primary.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: const Text(
-                    '\u{1F4CD}',
-                    style: TextStyle(fontSize: 18),
+                  child: const Icon(
+                    Icons.location_on_rounded,
+                    size: 18,
+                    color: GeezColors.primary,
                   ),
                 ),
                 const SizedBox(width: GeezSpacing.sm + 4),

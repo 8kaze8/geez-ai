@@ -36,9 +36,10 @@ class DiscoveryBar extends StatelessWidget {
           // Score header row
           Row(
             children: [
-              const Text(
-                '\u{1F9ED}',
-                style: TextStyle(fontSize: 20),
+              const Icon(
+                Icons.explore_rounded,
+                size: 20,
+                color: GeezColors.primary,
               ),
               const SizedBox(width: GeezSpacing.sm),
               Text(
@@ -114,7 +115,7 @@ class DiscoveryBar extends StatelessWidget {
                 ),
               ),
               Text(
-                '$pointsToNext puan \u{2192} $nextTier seviye',
+                '$pointsToNext puan → $nextTier seviye',
                 style: GeezTypography.caption.copyWith(
                   color: mutedColor,
                 ),

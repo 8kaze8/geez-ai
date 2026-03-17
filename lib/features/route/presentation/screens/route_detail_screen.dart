@@ -543,12 +543,12 @@ class _RouteHeader extends StatelessWidget {
             runSpacing: GeezSpacing.xs,
             children: [
               _InfoBadge(
-                icon: '📅',
+                icon: Icons.calendar_today_rounded,
                 text: '${route.durationDays} gün',
                 isDark: isDark,
               ),
               _InfoBadge(
-                icon: '📍',
+                icon: Icons.location_on_rounded,
                 text: '${route.city}, ${route.country}',
                 isDark: isDark,
               ),
@@ -558,7 +558,7 @@ class _RouteHeader extends StatelessWidget {
                 isDark: isDark,
               ),
               _InfoBadge(
-                icon: '💰',
+                icon: Icons.payments_rounded,
                 text: _budgetLabel(route.budgetLevel),
                 isDark: isDark,
               ),
@@ -569,23 +569,23 @@ class _RouteHeader extends StatelessWidget {
     );
   }
 
-  String _transportIcon(String mode) {
+  IconData _transportIcon(String mode) {
     switch (mode.toLowerCase()) {
       case 'walking':
       case 'yürüyüş':
-        return '🚶';
+        return Icons.directions_walk_rounded;
       case 'transit':
       case 'public':
       case 'toplu taşıma':
-        return '🚌';
+        return Icons.directions_bus_rounded;
       case 'car':
       case 'araç':
-        return '🚗';
+        return Icons.directions_car_rounded;
       case 'cycling':
       case 'bisiklet':
-        return '🚲';
+        return Icons.directions_bike_rounded;
       default:
-        return '🚶';
+        return Icons.directions_walk_rounded;
     }
   }
 
@@ -627,7 +627,7 @@ class _InfoBadge extends StatelessWidget {
     required this.isDark,
   });
 
-  final String icon;
+  final IconData icon;
   final String text;
   final bool isDark;
 
@@ -642,7 +642,13 @@ class _InfoBadge extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(icon, style: const TextStyle(fontSize: 14)),
+          Icon(
+            icon,
+            size: 14,
+            color: isDark
+                ? GeezColors.textSecondaryDark
+                : GeezColors.textSecondary,
+          ),
           const SizedBox(width: 4),
           Text(
             text,

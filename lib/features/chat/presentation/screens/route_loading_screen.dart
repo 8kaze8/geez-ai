@@ -196,7 +196,7 @@ class _LoadingView extends StatelessWidget {
                   ),
                   child: Row(
                     children: [
-                      const Text('💡', style: TextStyle(fontSize: 18)),
+                      const Icon(Icons.lightbulb_rounded, size: 18, color: GeezColors.primary),
                       const SizedBox(width: GeezSpacing.sm),
                       Expanded(
                         child: Text(

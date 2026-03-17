@@ -166,17 +166,17 @@ Future<void> _persist(
 
 /// Maps quiz budget labels (with emoji) to DB snake_case values.
 const _budgetMap = <String, String>{
-  '💰 Ekonomik': 'budget',
-  '💳 Orta': 'mid',
-  '💎 Premium': 'premium',
+  'Ekonomik': 'budget',
+  'Orta': 'mid',
+  'Premium': 'premium',
 };
 
-/// Maps quiz companion labels (with emoji) to DB snake_case values.
+/// Maps quiz companion labels to DB snake_case values.
 const _companionMap = <String, String>{
-  '🧑 Solo': 'solo',
-  '💑 Çift': 'couple',
-  '👫 Arkadaşlar': 'friends',
-  '👨‍👩‍👧‍👦 Aile': 'family',
+  'Solo': 'solo',
+  'Çift': 'couple',
+  'Arkadaşlar': 'friends',
+  'Aile': 'family',
 };
 
 /// Derives initial persona level (1 or 2) for each category.

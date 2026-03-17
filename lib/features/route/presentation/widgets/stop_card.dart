@@ -305,7 +305,8 @@ class _ExpandedContent extends StatelessWidget {
           // AI Insight / Insider tip
           if (stop.insiderTip != null) ...[
             _InfoSection(
-              emoji: '💡',
+              icon: Icons.lightbulb_rounded,
+              iconColor: GeezColors.primary,
               title: 'AI Insight',
               content: stop.insiderTip!,
               backgroundColor: GeezColors.primary.withValues(alpha: 0.06),
@@ -317,7 +318,8 @@ class _ExpandedContent extends StatelessWidget {
           // Review summary
           if (stop.reviewSummary != null) ...[
             _InfoSection(
-              emoji: '📝',
+              icon: Icons.rate_review_rounded,
+              iconColor: GeezColors.secondary,
               title: stop.reviewCount != null
                   ? 'Review Özeti (${_formatCount(stop.reviewCount!)})'
                   : 'Review Özeti',
@@ -331,7 +333,8 @@ class _ExpandedContent extends StatelessWidget {
           // Fun fact
           if (stop.funFact != null) ...[
             _InfoSection(
-              emoji: '🎯',
+              icon: Icons.auto_awesome_rounded,
+              iconColor: GeezColors.accent,
               title: 'Fun Fact',
               content: stop.funFact!,
               backgroundColor: GeezColors.accent.withValues(alpha: 0.06),
@@ -365,27 +368,27 @@ class _ExpandedContent extends StatelessWidget {
                   const SizedBox(height: 8),
                   if (stop.bestTime != null)
                     _DetailRow(
-                      icon: '⏱️',
+                      icon: Icons.schedule_rounded,
                       text: 'En iyi: ${stop.bestTime!}',
                       isDark: isDark,
                     ),
                   if (stop.entryFeeText != null)
                     _DetailRow(
-                      icon: '💰',
+                      icon: Icons.payments_rounded,
                       text: stop.entryFeeText!,
                       isDark: isDark,
                     )
                   else if (stop.entryFeeAmount != null &&
                       stop.entryFeeAmount! > 0)
                     _DetailRow(
-                      icon: '💰',
+                      icon: Icons.payments_rounded,
                       text:
                           '${stop.entryFeeCurrency} ${stop.entryFeeAmount!.toStringAsFixed(0)}',
                       isDark: isDark,
                     ),
                   if (stop.warnings != null)
                     _DetailRow(
-                      icon: '⚠️',
+                      icon: Icons.warning_amber_rounded,
                       text: stop.warnings!,
                       isDark: isDark,
                       isWarning: true,
@@ -420,14 +423,16 @@ class _ExpandedContent extends StatelessWidget {
 
 class _InfoSection extends StatelessWidget {
   const _InfoSection({
-    required this.emoji,
+    required this.icon,
+    required this.iconColor,
     required this.title,
     required this.content,
     required this.backgroundColor,
     required this.isDark,
   });
 
-  final String emoji;
+  final IconData icon;
+  final Color iconColor;
   final String title;
   final String content;
   final Color backgroundColor;
@@ -447,7 +452,7 @@ class _InfoSection extends StatelessWidget {
         children: [
           Row(
             children: [
-              Text(emoji, style: const TextStyle(fontSize: 16)),
+              Icon(icon, size: 16, color: iconColor),
               const SizedBox(width: 6),
               Text(
                 title,
@@ -484,7 +489,7 @@ class _DetailRow extends StatelessWidget {
     this.isWarning = false,
   });
 
-  final String icon;
+  final IconData icon;
   final String text;
   final bool isDark;
   final bool isWarning;
@@ -496,7 +501,15 @@ class _DetailRow extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(icon, style: const TextStyle(fontSize: 14)),
+          Icon(
+            icon,
+            size: 14,
+            color: isWarning
+                ? GeezColors.warning
+                : (isDark
+                    ? GeezColors.textSecondaryDark
+                    : GeezColors.textSecondary),
+          ),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
@@ -531,19 +544,19 @@ class _TravelConnector extends StatelessWidget {
   final String? mode;
   final bool isDark;
 
-  String get _icon {
+  IconData get _icon {
     switch (mode?.toLowerCase()) {
       case 'transit':
       case 'bus':
-        return '🚌';
+        return Icons.directions_bus_rounded;
       case 'car':
       case 'driving':
-        return '🚗';
+        return Icons.directions_car_rounded;
       case 'cycling':
       case 'bike':
-        return '🚲';
+        return Icons.directions_bike_rounded;
       default:
-        return '🚶';
+        return Icons.directions_walk_rounded;
     }
   }
 
@@ -577,7 +590,13 @@ class _TravelConnector extends StatelessWidget {
             ],
           ),
           const SizedBox(width: 12),
-          Text(_icon, style: const TextStyle(fontSize: 14)),
+          Icon(
+            _icon,
+            size: 16,
+            color: isDark
+                ? GeezColors.textSecondaryDark
+                : GeezColors.textSecondary,
+          ),
           const SizedBox(width: 6),
           Text(
             _label,

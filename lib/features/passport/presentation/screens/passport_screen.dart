@@ -19,23 +19,23 @@ import 'package:geez_ai/shared/widgets/shimmer_box.dart';
 
 final _staticCollections = [
   const CollectionEntry(
-    icon: '\u{1F3DB}',
-    title: 'Antik Dunya',
+    icon: Icons.account_balance_rounded,
+    title: 'Antik Dünya',
     current: 0,
     total: 7,
     color: GeezColors.history,
     comingSoon: true,
   ),
   const CollectionEntry(
-    icon: '\u{1F355}',
-    title: 'Food Capital',
+    icon: Icons.restaurant_rounded,
+    title: 'Gurme Başkentler',
     current: 0,
     total: 5,
     color: GeezColors.foodie,
     comingSoon: true,
   ),
   const CollectionEntry(
-    icon: '\u{1F3D6}',
+    icon: Icons.beach_access_rounded,
     title: 'Akdeniz',
     current: 0,
     total: 8,
@@ -156,7 +156,7 @@ class _PassportContent extends ConsumerWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Text('\u{1F6C2}', style: TextStyle(fontSize: 28)),
+          Icon(Icons.badge_rounded, size: 28, color: GeezColors.primary),
           const SizedBox(width: GeezSpacing.sm),
           Text(
             'GEZ PASAPORTU',
@@ -201,9 +201,10 @@ class _PassportContent extends ConsumerWidget {
                 ),
               ),
               child: const Center(
-                child: Text(
-                  '\u{2708}\u{FE0F}',
-                  style: TextStyle(fontSize: 28),
+                child: Icon(
+                  Icons.flight_rounded,
+                  size: 28,
+                  color: GeezColors.primary,
                 ),
               ),
             ),
@@ -384,7 +385,7 @@ class _PersonaBar extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: GeezSpacing.md),
       child: Row(
         children: [
-          Text(level.emoji, style: const TextStyle(fontSize: 18)),
+          Icon(level.icon, size: 18, color: level.color),
           const SizedBox(width: GeezSpacing.sm),
           Expanded(
             child: Column(
@@ -556,9 +557,10 @@ class _PassportEmpty extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text(
-              '\u{1F6C2}',
-              style: TextStyle(fontSize: 72),
+            Icon(
+              Icons.badge_rounded,
+              size: 72,
+              color: GeezColors.primary.withValues(alpha: 0.4),
             ),
             const SizedBox(height: GeezSpacing.lg),
             Text(

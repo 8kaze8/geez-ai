@@ -225,24 +225,24 @@ class _QuizScreenState extends State<QuizScreen>
 }
 
 const _travelStyles = [
-  '🏛️ Tarihi Keşif',
-  '🍕 Yemek Turu',
-  '🌿 Doğa',
-  '🎒 Macera',
-  '🎲 Karma — Surprise me!',
+  'Tarihi Keşif',
+  'Yemek Turu',
+  'Doğa',
+  'Macera',
+  'Karma — Surprise me!',
 ];
 
 const _budgetOptions = [
-  '💰 Ekonomik',
-  '💳 Orta',
-  '💎 Premium',
+  'Ekonomik',
+  'Orta',
+  'Premium',
 ];
 
 const _companionOptions = [
-  '🧑 Solo',
-  '💑 Çift',
-  '👫 Arkadaşlar',
-  '👨‍👩‍👧‍👦 Aile',
+  'Solo',
+  'Çift',
+  'Arkadaşlar',
+  'Aile',
 ];
 
 class _QuestionSection extends StatelessWidget {

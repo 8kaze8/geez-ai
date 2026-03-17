@@ -194,7 +194,7 @@ class _PersonaRevealScreenState extends ConsumerState<PersonaRevealScreen>
                     return FadeTransition(
                       opacity: _sparkleOpacity,
                       child: Text(
-                        '✨ SENİN TRAVEL PERSONAN: ✨',
+                        'SENİN SEYAHAT KİŞİLİĞİN',
                         style: GeezTypography.caption.copyWith(
                           color: GeezColors.secondary,
                           fontWeight: FontWeight.w700,

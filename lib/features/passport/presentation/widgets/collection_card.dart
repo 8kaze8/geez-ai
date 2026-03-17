@@ -17,7 +17,7 @@ class CollectionEntry {
     this.comingSoon = false,
   });
 
-  final String icon;
+  final IconData icon;
   final String title;
   final int current;
   final int total;
@@ -66,9 +66,10 @@ class CollectionCard extends StatelessWidget {
               borderRadius: BorderRadius.circular(12),
             ),
             alignment: Alignment.center,
-            child: Text(
+            child: Icon(
               collection.icon,
-              style: const TextStyle(fontSize: 22),
+              size: 22,
+              color: collection.color,
             ),
           ),
           const SizedBox(width: GeezSpacing.md),
