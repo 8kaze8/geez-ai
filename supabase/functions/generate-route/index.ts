@@ -535,6 +535,7 @@ Deno.serve(
       budgetLevel: body.budgetLevel,
       transportMode: body.transportMode,
       language: body.language,
+      durationDays: body.durationDays,
     };
 
     const cached = await getCachedRoute(serviceClient, cacheKey);

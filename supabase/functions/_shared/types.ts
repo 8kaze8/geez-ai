@@ -320,11 +320,13 @@ export interface RateLimitInfo {
 /**
  * Cache key components for AI route responses.
  *
- * Canonical key: `${city}:${country}:${travelStyle}:${budgetLevel}:${transportMode}:${language}`
+ * Canonical key: `${city}:${country}:${travelStyle}:${budgetLevel}:${transportMode}:${language}:${durationDays}`
  * TTL: 7 days (604 800 seconds).
  *
  * country is included so that city names that appear in multiple countries
  * (e.g. "Victoria" in Canada vs. Seychelles) never collide.
+ * durationDays is included so that a 2-day and a 5-day route for the same
+ * city/style/budget/transport combo produce distinct cache entries.
  */
 export interface RouteCacheKey {
   city: string;
@@ -334,6 +336,8 @@ export interface RouteCacheKey {
   budgetLevel: BudgetLevel;
   transportMode: TransportMode;
   language: string;
+  /** Number of days in the itinerary (1–14). */
+  durationDays: number;
 }
 
 /**
@@ -350,5 +354,6 @@ export function buildCacheKey(key: RouteCacheKey): string {
     key.budgetLevel,
     key.transportMode,
     key.language.toLowerCase(),
+    String(key.durationDays),
   ].join(":");
 }
