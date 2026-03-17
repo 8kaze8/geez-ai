@@ -202,13 +202,13 @@ function getSuggestionsForStep(step: number, language = "tr"): string[] {
     case 1:
       // Travel style
       return isTr
-        ? ["Tarih & Kultur", "Yeme & Icme", "Macera", "Doga", "Karisik"]
+        ? ["Tarih & Kültür", "Yeme & İçme", "Macera", "Doğa", "Karışık"]
         : ["Historical", "Food & Drink", "Adventure", "Nature", "Mixed"];
 
     case 2:
       // Transport mode
       return isTr
-        ? ["Yuruyerek", "Toplu Tasima", "Aracla", "Karisik"]
+        ? ["Yürüyerek", "Toplu Taşıma", "Araçla", "Karışık"]
         : ["Walking", "Public Transit", "By Car", "Mixed"];
 
     case 3:
@@ -220,7 +220,7 @@ function getSuggestionsForStep(step: number, language = "tr"): string[] {
     case 4:
       // Duration
       return isTr
-        ? ["1 Gun", "2 Gun", "3 Gun", "5 Gun", "7 Gun"]
+        ? ["1 Gün", "2 Gün", "3 Gün", "5 Gün", "7 Gün"]
         : ["1 Day", "2 Days", "3 Days", "5 Days", "7 Days"];
 
     default:

@@ -30,34 +30,34 @@ import { sanitizeUserInput } from "../_shared/sanitize.ts";
 export function buildChatSystemPrompt(language = "tr"): string {
   const langInstruction =
     language === "tr"
-      ? "Turkce yanit ver. Samimi, sicak bir dil kullan (sen dili)."
+      ? "Türkçe yanıt ver. Samimi, sıcak bir dil kullan (sen dili)."
       : language === "en"
         ? "Reply in English. Use a warm, friendly tone."
         : `Reply in the language identified by BCP-47 code "${language}". Use a warm, friendly tone.`;
 
-  return `Sen Geez AI'in seyahat asistanisin. Adin Geez.
+  return `Sen Geez AI'in seyahat asistanısın. Adın Geez.
 
-Gorev: Kullanicinin seyahat rota parametrelerini sohbet yoluyla toplamak.
-Toplanacak bilgiler: sehir, seyahat stili, ulasim modu, butce seviyesi, sure (gun).
+Görev: Kullanıcının seyahat rota parametrelerini sohbet yoluyla toplamak.
+Toplanacak bilgiler: şehir, seyahat stili, ulaşım modu, bütçe seviyesi, süre (gün).
 
 Kurallar:
 - ${langInstruction}
-- Kisa ve oz yanitlar ver (maksimum 2-3 cumle).
-- Her yanitte sadece bir soru sor.
-- Kullanicinin yaniti belirsizse, kibar bir sekilde tekrar sor.
-- Emoji kullanabilirsin ama asiri kullanma (maksimum 2 per mesaj).
-- Kullanicinin secimini her zaman olumla, sonra bir sonraki soruya gec.
-- ASLA rota onerme, ASLA mekan adi soyleme — sadece parametreleri topla.
+- Kısa ve öz yanıtlar ver (maksimum 2-3 cümle).
+- Her yanıtta sadece bir soru sor.
+- Kullanıcının yanıtı belirsizse, kibarca tekrar sor.
+- Emoji kullanabilirsin ama aşırı kullanma (maksimum 2 per mesaj).
+- Kullanıcının seçimini her zaman onayla, sonra bir sonraki soruya geç.
+- ASLA rota önerme, ASLA mekan adı söyleme — sadece parametreleri topla.
 
-Yanit formati: Her zaman asagidaki JSON formatinda yanit ver:
+Yanıt formatı: Her zaman aşağıdaki JSON formatında yanıt ver:
 {
-  "message": "Kullaniciya gosterilecek mesaj",
+  "message": "Kullanıcıya gösterilecek mesaj",
   "understood": true
 }
 
-"understood" alani:
-- true: Kullanicinin yaniti anlasildi, bir sonraki adima gecilecek.
-- false: Yanet belirsiz veya gecersiz, ayni soru tekrar sorulacak.`;
+"understood" alanı:
+- true: Kullanıcının yanıtı anlaşıldı, bir sonraki adıma geçilecek.
+- false: Yanıt belirsiz veya geçersiz, aynı soru tekrar sorulacak.`;
 }
 
 // ---------------------------------------------------------------------------
@@ -94,13 +94,13 @@ export function buildStepPrompt(
   switch (step) {
     case 0:
       return isTr
-        ? `Kullanici bir sehir/destinasyon belirtti: "${lastUserMsg}".
+        ? `Kullanıcı bir şehir/destinasyon belirtti: "${lastUserMsg}".
 
-Gorev:
-1. Sehri onayla (harika secim! vs.)
-2. Seyahat stili sor: Tarih & Kultur, Yeme & Icme, Macera, Doga, Karisik gibi secenekler sun.
+Görev:
+1. Şehri onayla (harika seçim! vs.)
+2. Seyahat stilini sor: Tarih & Kültür, Yeme & İçme, Macera, Doğa, Karışık gibi seçenekler sun.
 
-JSON formatinda yanit ver: { "message": "...", "understood": true }`
+JSON formatında yanıt ver: { "message": "...", "understood": true }`
         : `The user specified a city/destination: "${lastUserMsg}".
 
 Task:
@@ -111,13 +111,13 @@ Reply in JSON: { "message": "...", "understood": true }`;
 
     case 1:
       return isTr
-        ? `Kullanici seyahat stilini belirtti: "${lastUserMsg}".
+        ? `Kullanıcı seyahat stilini belirtti: "${lastUserMsg}".
 
-Gorev:
+Görev:
 1. Stili onayla.
-2. Ulasim modunu sor: Yuruyerek, Toplu Tasima, Aracla, Karisik.
+2. Ulaşım modunu sor: Yürüyerek, Toplu Taşıma, Araçla, Karışık.
 
-JSON formatinda yanit ver: { "message": "...", "understood": true }`
+JSON formatında yanıt ver: { "message": "...", "understood": true }`
         : `The user specified travel style: "${lastUserMsg}".
 
 Task:
@@ -128,13 +128,13 @@ Reply in JSON: { "message": "...", "understood": true }`;
 
     case 2:
       return isTr
-        ? `Kullanici ulasim modunu belirtti: "${lastUserMsg}".
+        ? `Kullanıcı ulaşım modunu belirtti: "${lastUserMsg}".
 
-Gorev:
-1. Ulasim modunu onayla.
-2. Butce seviyesini sor: Ekonomik, Orta, Premium.
+Görev:
+1. Ulaşım modunu onayla.
+2. Bütçe seviyesini sor: Ekonomik, Orta, Premium.
 
-JSON formatinda yanit ver: { "message": "...", "understood": true }`
+JSON formatında yanıt ver: { "message": "...", "understood": true }`
         : `The user specified transport mode: "${lastUserMsg}".
 
 Task:
@@ -145,13 +145,13 @@ Reply in JSON: { "message": "...", "understood": true }`;
 
     case 3:
       return isTr
-        ? `Kullanici butce seviyesini belirtti: "${lastUserMsg}".
+        ? `Kullanıcı bütçe seviyesini belirtti: "${lastUserMsg}".
 
-Gorev:
-1. Butceyi onayla.
-2. Gezi suresini sor: 1-7 gun arasi secenekler sun.
+Görev:
+1. Bütçeyi onayla.
+2. Gezi süresini sor: 1-7 gün arası seçenekler sun.
 
-JSON formatinda yanit ver: { "message": "...", "understood": true }`
+JSON formatında yanıt ver: { "message": "...", "understood": true }`
         : `The user specified budget level: "${lastUserMsg}".
 
 Task:
@@ -162,14 +162,14 @@ Reply in JSON: { "message": "...", "understood": true }`;
 
     case 4:
       return isTr
-        ? `Kullanici gezi suresini belirtti: "${lastUserMsg}".
+        ? `Kullanıcı gezi süresini belirtti: "${lastUserMsg}".
 
-Gorev:
-1. Sureyi onayla.
-2. Tum parametrelerin bir ozetini yap (sehir, stil, ulasim, butce, sure).
-3. "Rotani olusturayim mi?" diye sor.
+Görev:
+1. Süreyi onayla.
+2. Tüm parametrelerin bir özetini yap (şehir, stil, ulaşım, bütçe, süre).
+3. "Rotanı oluşturayım mı?" diye sor.
 
-JSON formatinda yanit ver: { "message": "...", "understood": true }`
+JSON formatında yanıt ver: { "message": "...", "understood": true }`
         : `The user specified trip duration: "${lastUserMsg}".
 
 Task:
@@ -181,8 +181,8 @@ Reply in JSON: { "message": "...", "understood": true }`;
 
     default:
       return isTr
-        ? `Kullanicinin mesajini anla ve uygun sekilde yanit ver.
-JSON formatinda yanit ver: { "message": "...", "understood": false }`
+        ? `Kullanıcının mesajını anla ve uygun şekilde yanıt ver.
+JSON formatında yanıt ver: { "message": "...", "understood": false }`
         : `Understand the user's message and respond appropriately.
 Reply in JSON: { "message": "...", "understood": false }`;
   }
@@ -256,39 +256,39 @@ Rules:
 Return JSON only, no other text.`;
   }
 
-  return `Asagidaki sohbetten rota olusturma parametrelerini cikar.
+  return `Aşağıdaki sohbetten rota oluşturma parametrelerini çıkar.
 
 Sohbet:
 ${conversationText}
 
-Parametreleri asagidaki JSON formatinda don:
+Parametreleri aşağıdaki JSON formatında dön:
 {
-  "city": "Sehir adi (ornegin Istanbul, Paris, Tokyo)",
-  "country": "Ulke adi veya ISO kodu (ornegin Turkey, France, JP)",
+  "city": "Şehir adı (örneğin İstanbul, Paris, Tokyo)",
+  "country": "Ülke adı veya ISO kodu (örneğin Turkey, France, JP)",
   "travelStyle": "historical | food | adventure | nature | mixed",
   "transportMode": "walking | public | car | mixed",
   "budgetLevel": "budget | mid | premium",
-  "durationDays": 1-7 arasi bir sayi
+  "durationDays": 1-7 arası bir sayı
 }
 
 Kurallar:
-- travelStyle degerleri: historical, food, adventure, nature, mixed
-  - "Tarih", "Kultur", "Tarihi kesif" gibi yanitlar -> "historical"
-  - "Yemek", "Yeme & Icme", "Food" -> "food"
+- travelStyle değerleri: historical, food, adventure, nature, mixed
+  - "Tarih", "Kültür", "Tarih & Kültür", "Tarihi keşif" gibi yanıtlar -> "historical"
+  - "Yemek", "Yeme & İçme", "Food" -> "food"
   - "Macera", "Adventure" -> "adventure"
-  - "Doga", "Nature" -> "nature"
-  - "Karma", "Karisik", "Mixed", "Surprise" -> "mixed"
-- transportMode degerleri: walking, public, car, mixed
-  - "Yuruyerek", "Yaya", "Walking" -> "walking"
-  - "Toplu tasima", "Metro", "Otobus", "Public" -> "public"
-  - "Araba", "Arac", "Car" -> "car"
-  - "Karisik", "Taksi", "Mixed" -> "mixed"
-- budgetLevel degerleri: budget, mid, premium
-  - "Ekonomik", "Ucuz", "Budget", "500 alti" -> "budget"
-  - "Orta", "Mid", "500-1000" -> "mid"
-  - "Premium", "Luks", "1000+", "Farketmez" -> "premium"
-- durationDays: Sayisal deger cikar. "1 Gun" -> 1, "Bir hafta" -> 7
-- country: Sehre gore otomatik belirle (Istanbul -> Turkey, Paris -> France)
+  - "Doğa", "Nature" -> "nature"
+  - "Karma", "Karışık", "Mixed", "Surprise" -> "mixed"
+- transportMode değerleri: walking, public, car, mixed
+  - "Yürüyerek", "Yaya", "Walking" -> "walking"
+  - "Toplu Taşıma", "Metro", "Otobüs", "Public" -> "public"
+  - "Araçla", "Araba", "Car" -> "car"
+  - "Karışık", "Taksi", "Mixed" -> "mixed"
+- budgetLevel değerleri: budget, mid, premium
+  - "Ekonomik", "Ucuz", "Budget" -> "budget"
+  - "Orta", "Mid" -> "mid"
+  - "Premium", "Lüks", "Farketmez" -> "premium"
+- durationDays: Sayısal değer çıkar. "1 Gün" -> 1, "Bir hafta" -> 7
+- country: Şehre göre otomatik belirle (İstanbul -> Turkey, Paris -> France)
 
-Sadece JSON don, baska bir sey yazma.`;
+Sadece JSON dön, başka bir şey yazma.`;
 }
