@@ -241,10 +241,17 @@ class _ScaffoldWithNavBar extends StatelessWidget {
 
 class _AuthRefreshNotifier extends ChangeNotifier {
   _AuthRefreshNotifier(this._ref) {
-    _ref.listen<AuthState>(authStateProvider, (prev, next) {
+    _subscription = _ref.listen<AuthState>(authStateProvider, (prev, next) {
       notifyListeners();
     });
   }
 
   final Ref _ref;
+  late final ProviderSubscription<AuthState> _subscription;
+
+  @override
+  void dispose() {
+    _subscription.close();
+    super.dispose();
+  }
 }

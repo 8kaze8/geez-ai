@@ -16,6 +16,7 @@ class ChatState {
     this.extractedParams,
     this.errorMessage,
     this.errorType,
+    this.lastFailedMessage,
   });
 
   final List<ChatMessageModel> messages;
@@ -39,7 +40,16 @@ class ChatState {
   final String? errorMessage;
   final ChatErrorType? errorType;
 
+  /// The user message text that caused the last failure — used for retry.
+  final String? lastFailedMessage;
+
   bool get hasError => errorMessage != null;
+
+  /// True when there is a retryable failed message (non-rate-limit errors).
+  bool get canRetry =>
+      hasError &&
+      lastFailedMessage != null &&
+      errorType != ChatErrorType.rateLimitExceeded;
 
   ChatState copyWith({
     List<ChatMessageModel>? messages,
@@ -50,6 +60,7 @@ class ChatState {
     Map<String, dynamic>? extractedParams,
     String? errorMessage,
     ChatErrorType? errorType,
+    String? lastFailedMessage,
     bool clearError = false,
   }) =>
       ChatState(
@@ -61,6 +72,9 @@ class ChatState {
         extractedParams: extractedParams ?? this.extractedParams,
         errorMessage: clearError ? null : (errorMessage ?? this.errorMessage),
         errorType: clearError ? null : (errorType ?? this.errorType),
+        lastFailedMessage: clearError
+            ? null
+            : (lastFailedMessage ?? this.lastFailedMessage),
       );
 }
 
@@ -85,6 +99,28 @@ class ChatNotifier extends StateNotifier<ChatState> {
     if (trimmed.isEmpty || state.isLoading) return;
 
     final userMessage = ChatMessageModel.user(trimmed);
+
+    // If Q&A is done (step > 4), store as additional note — no API call
+    if (state.currentStep > 4) {
+      final updatedParams = Map<String, dynamic>.from(
+        state.extractedParams ?? {},
+      );
+      final existing = updatedParams['additionalNotes'] as String? ?? '';
+      updatedParams['additionalNotes'] = existing.isEmpty
+          ? trimmed
+          : '$existing; $trimmed';
+
+      final noteConfirm = ChatMessageModel.assistant(
+        'Notunu aldım, rota oluştururken dikkate alacağım! 👍',
+      );
+      state = state.copyWith(
+        messages: [...state.messages, userMessage, noteConfirm],
+        extractedParams: updatedParams,
+        clearError: true,
+      );
+      return;
+    }
+
     state = state.copyWith(
       messages: [...state.messages, userMessage],
       isLoading: true,
@@ -92,7 +128,28 @@ class ChatNotifier extends StateNotifier<ChatState> {
       clearError: true,
     );
 
-    await _callChat(userMessage);
+    await _callChat(userMessage, originalText: trimmed);
+  }
+
+  /// Retries the last failed message without the user having to retype it.
+  /// The failed user bubble is already in [state.messages], so we only call
+  /// the Edge Function again — no extra bubble is added.
+  Future<void> retryLastMessage() async {
+    final failedText = state.lastFailedMessage;
+    if (failedText == null || state.isLoading) return;
+
+    // Clear the error but keep the existing user bubble in the list.
+    state = state.copyWith(
+      isLoading: true,
+      suggestions: [],
+      clearError: true,
+    );
+
+    // Re-use the last user message object that is already in the list.
+    // Guard against concurrent reset() clearing messages.
+    final idx = state.messages.lastIndexWhere((m) => m.isUser);
+    if (idx == -1) return;
+    await _callChat(state.messages[idx], originalText: failedText);
   }
 
   /// Tapping a suggestion chip — delegates to [sendMessage].
@@ -122,13 +179,19 @@ class ChatNotifier extends StateNotifier<ChatState> {
   }
 
   /// Sends [userMessage] to the /chat Edge Function and applies the response
-  /// to [state].
-  Future<void> _callChat(ChatMessageModel userMessage) async {
+  /// to [state]. [originalText] is stored on failure so [retryLastMessage]
+  /// can replay the call without the user retyping.
+  Future<void> _callChat(
+    ChatMessageModel userMessage, {
+    required String originalText,
+  }) async {
     try {
       final response = await _repo.sendMessage(
         messages: state.messages,
         currentStep: state.currentStep,
       );
+
+      if (!mounted) return;
 
       final assistantMessage = ChatMessageModel.assistant(response.message);
 
@@ -139,17 +202,22 @@ class ChatNotifier extends StateNotifier<ChatState> {
         isLoading: false,
         isComplete: response.isComplete,
         extractedParams: response.extractedParams ?? state.extractedParams,
+        clearError: true,
       );
     } on ChatException catch (e) {
+      if (!mounted) return;
       state = state.copyWith(
         isLoading: false,
         errorMessage: _turkishError(e),
         errorType: e.type,
+        lastFailedMessage: originalText,
       );
     } catch (e) {
+      if (!mounted) return;
       state = state.copyWith(
         isLoading: false,
         errorMessage: 'Beklenmedik bir hata oluştu. Lütfen tekrar deneyin.',
+        lastFailedMessage: originalText,
       );
     }
   }
@@ -164,6 +232,8 @@ class ChatNotifier extends StateNotifier<ChatState> {
         'Sunucu hatası oluştu. Lütfen biraz bekleyip tekrar deneyin.',
       ChatErrorType.networkError =>
         'İnternet bağlantısı kurulamadı. Bağlantınızı kontrol edin.',
+      ChatErrorType.unauthorized =>
+        'Oturumunuz sona erdi. Lütfen tekrar giriş yapın.',
     };
   }
 }
