@@ -48,10 +48,13 @@ app.*.map.json
 .mcp.json
 .playwright-mcp/
 
-# Claude Code
+# Claude Code & AI tooling
 .claude/
 CLAUDE.md
 project-memory.md
+
+# Planning docs (not project code)
+docs/
 
 # Supabase temp
 supabase/.temp/
@@ -60,5 +63,19 @@ supabase/.temp/
 ios/build/
 **/ios/Flutter/*.podspec
 
+# Flutter generated
+.metadata
+.flutter-plugins
+.flutter-plugins-dependencies
+
 # Memory
 memory/
+
+# IDE
+*.iml
+*.ipr
+*.iws
+.idea/
+
+# Misc
+.env.example
