@@ -222,7 +222,7 @@ class _ProfileContent extends ConsumerWidget {
           const SizedBox(height: GeezSpacing.lg),
 
           // Travel Persona Section
-          _buildSectionTitle('Travel Persona', isDark),
+          _buildSectionTitle('Seyahat Kişiliğim', isDark),
           const SizedBox(height: GeezSpacing.md),
           _buildPersonaCard(data, isDark),
           const SizedBox(height: GeezSpacing.md),
@@ -230,7 +230,7 @@ class _ProfileContent extends ConsumerWidget {
           // Share Persona Button
           Center(
             child: GeezButton(
-              label: 'Personami Paylas',
+              label: 'Personamı Paylaş',
               onTap: () => ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text('Yakinda!')),
               ),

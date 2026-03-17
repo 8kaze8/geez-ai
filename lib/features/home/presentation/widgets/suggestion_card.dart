@@ -22,18 +22,22 @@ class HomeSuggestion {
 }
 
 /// Static suggestions shown until AI-powered personalised suggestions land.
+///
+/// TODO(Phase 2): Replace with a Supabase-backed provider that calls the
+/// AI Personalization Engine to return suggestions based on the user's
+/// TravelPersona (preferred styles, past cities, discovery score tier).
 const List<HomeSuggestion> kSampleSuggestions = [
   HomeSuggestion(
     city: 'Roma',
     country: 'Italya',
     flag: '\u{1F1EE}\u{1F1F9}',
-    reason: 'Tarih sever olarak kacirma',
+    reason: 'Tarih sever olarak kaçırma',
   ),
   HomeSuggestion(
     city: 'Atina',
     country: 'Yunanistan',
     flag: '\u{1F1EC}\u{1F1F7}',
-    reason: 'Acik hava + antik ruins',
+    reason: 'Açık hava + antik kalıntılar',
   ),
   HomeSuggestion(
     city: 'Barselona',
