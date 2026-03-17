@@ -215,18 +215,18 @@ class SuggestionCard extends StatelessWidget {
     switch (city) {
       case 'Roma':
         return [
-          const Color(0xFF795548),
-          const Color(0xFFD7CCC8),
+          GeezColors.gradientRomeStart,
+          GeezColors.gradientRomeEnd,
         ];
       case 'Atina':
         return [
-          const Color(0xFF1565C0),
-          const Color(0xFF90CAF9),
+          GeezColors.gradientAthensStart,
+          GeezColors.gradientAthensEnd,
         ];
       case 'Barselona':
         return [
-          const Color(0xFFE65100),
-          const Color(0xFFFFCC80),
+          GeezColors.gradientBarcelonaStart,
+          GeezColors.gradientBarcelonaEnd,
         ];
       default:
         return [

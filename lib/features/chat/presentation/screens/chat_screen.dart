@@ -409,7 +409,7 @@ class _GenerationLoadingBar extends StatelessWidget {
           const LinearProgressIndicator(
             valueColor:
                 AlwaysStoppedAnimation<Color>(GeezColors.primary),
-            backgroundColor: Color(0xFFE3F2FD),
+            backgroundColor: GeezColors.progressBg,
           ),
           const SizedBox(height: GeezSpacing.sm),
           Text(
@@ -480,7 +480,7 @@ class _BottomInputBar extends StatelessWidget {
         Expanded(
           child: Container(
             decoration: BoxDecoration(
-              color: isDark ? const Color(0xFF2A2A2E) : const Color(0xFFF5F5F5),
+              color: isDark ? GeezColors.surfaceVariantDark : GeezColors.surfaceVariant,
               borderRadius: BorderRadius.circular(24),
             ),
             child: TextField(
@@ -565,7 +565,7 @@ class _BottomInputBar extends StatelessWidget {
             Expanded(
               child: Container(
                 decoration: BoxDecoration(
-                  color: isDark ? const Color(0xFF2A2A2E) : const Color(0xFFF5F5F5),
+                  color: isDark ? GeezColors.surfaceVariantDark : GeezColors.surfaceVariant,
                   borderRadius: BorderRadius.circular(24),
                 ),
                 child: TextField(
@@ -642,7 +642,7 @@ class _BottomInputBar extends StatelessWidget {
             padding: const EdgeInsets.symmetric(vertical: 14),
             decoration: BoxDecoration(
               gradient: const LinearGradient(
-                colors: [GeezColors.primary, Color(0xFF1565C0)],
+                colors: [GeezColors.primary, GeezColors.primaryDeep],
               ),
               borderRadius: BorderRadius.circular(GeezRadius.button),
               boxShadow: [

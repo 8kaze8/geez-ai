@@ -62,8 +62,8 @@ class _GeezChipState extends State<GeezChip>
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final mutedBorderColor = isDark
-        ? const Color(0xFF424242)
-        : const Color(0xFFE0E0E0);
+        ? GeezColors.borderMutedDark
+        : GeezColors.borderMutedLight;
 
     return ScaleTransition(
       scale: _scaleAnimation,

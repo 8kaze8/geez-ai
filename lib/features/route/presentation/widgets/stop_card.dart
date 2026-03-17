@@ -50,8 +50,8 @@ class _StopCardState extends State<StopCard>
                 color: _isExpanded
                     ? GeezColors.primary.withValues(alpha: 0.3)
                     : (isDark
-                        ? const Color(0xFF2A2A2E)
-                        : const Color(0xFFEEEEEE)),
+                        ? GeezColors.surfaceVariantDark
+                        : GeezColors.borderLight),
                 width: 1.5,
               ),
               boxShadow: [
@@ -184,7 +184,7 @@ class _CollapsedHeader extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       const Icon(Icons.star_rounded,
-                          size: 16, color: Color(0xFFFFC107)),
+                          size: 16, color: GeezColors.discovery),
                       const SizedBox(width: 2),
                       Text(
                         stop.googleRating!.toStringAsFixed(1),
@@ -346,8 +346,8 @@ class _ExpandedContent extends StatelessWidget {
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
                 color: isDark
-                    ? const Color(0xFF252528)
-                    : const Color(0xFFF8F8F8),
+                    ? GeezColors.surfaceElevatedDark
+                    : GeezColors.surfaceElevated,
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Column(
@@ -563,16 +563,16 @@ class _TravelConnector extends StatelessWidget {
                 width: 2,
                 height: 8,
                 color: isDark
-                    ? const Color(0xFF3A3A3E)
-                    : const Color(0xFFD0D0D0),
+                    ? GeezColors.borderDark
+                    : GeezColors.divider,
               ),
               const SizedBox(height: 3),
               Container(
                 width: 2,
                 height: 8,
                 color: isDark
-                    ? const Color(0xFF3A3A3E)
-                    : const Color(0xFFD0D0D0),
+                    ? GeezColors.borderDark
+                    : GeezColors.divider,
               ),
             ],
           ),

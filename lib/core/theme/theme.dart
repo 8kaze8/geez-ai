@@ -24,7 +24,7 @@ class GeezTheme {
           onSecondary: Colors.white,
           onSurface: GeezColors.textPrimary,
           onError: Colors.white,
-          outline: Color(0xFFE0E0E0),
+          outline: GeezColors.borderMutedLight,
           surfaceContainerHighest: GeezColors.background,
         ),
 
@@ -126,7 +126,7 @@ class GeezTheme {
           ),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(GeezRadius.button),
-            borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
+            borderSide: const BorderSide(color: GeezColors.borderMutedLight),
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(GeezRadius.button),
@@ -154,7 +154,7 @@ class GeezTheme {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(GeezRadius.chip),
           ),
-          side: const BorderSide(color: Color(0xFFE0E0E0)),
+          side: const BorderSide(color: GeezColors.borderMutedLight),
         ),
 
         // Bottom navigation bar
@@ -196,7 +196,7 @@ class GeezTheme {
             ),
           ),
           showDragHandle: true,
-          dragHandleColor: Color(0xFFE0E0E0),
+          dragHandleColor: GeezColors.borderMutedLight,
         ),
 
         // Dialog
@@ -215,7 +215,7 @@ class GeezTheme {
 
         // Divider
         dividerTheme: const DividerThemeData(
-          color: Color(0xFFEEEEEE),
+          color: GeezColors.borderLight,
           thickness: 1,
           space: 1,
         ),
@@ -262,7 +262,7 @@ class GeezTheme {
           onSecondary: Colors.white,
           onSurface: GeezColors.textPrimaryDark,
           onError: Colors.white,
-          outline: Color(0xFF424242),
+          outline: GeezColors.borderMutedDark,
           surfaceContainerHighest: GeezColors.backgroundDark,
         ),
 
@@ -364,7 +364,7 @@ class GeezTheme {
           ),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(GeezRadius.button),
-            borderSide: const BorderSide(color: Color(0xFF424242)),
+            borderSide: const BorderSide(color: GeezColors.borderMutedDark),
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(GeezRadius.button),
@@ -394,7 +394,7 @@ class GeezTheme {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(GeezRadius.chip),
           ),
-          side: const BorderSide(color: Color(0xFF424242)),
+          side: const BorderSide(color: GeezColors.borderMutedDark),
         ),
 
         // Bottom navigation bar
@@ -439,7 +439,7 @@ class GeezTheme {
             ),
           ),
           showDragHandle: true,
-          dragHandleColor: Color(0xFF616161),
+          dragHandleColor: GeezColors.textSecondary,
         ),
 
         // Dialog
@@ -458,7 +458,7 @@ class GeezTheme {
 
         // Divider
         dividerTheme: const DividerThemeData(
-          color: Color(0xFF424242),
+          color: GeezColors.borderMutedDark,
           thickness: 1,
           space: 1,
         ),

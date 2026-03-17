@@ -27,7 +27,11 @@ class FeedbackRepository extends BaseRepository {
   /// and re-submit corrections — both cases should result in a single row.
   Future<void> submitFeedback(TripFeedbackModel feedback) async {
     try {
-      final json = feedback.toJson()..remove('id');
+      // Strip server-managed fields: id (gen_random_uuid()) and
+      // created_at (DEFAULT now(), NOT NULL) — letting Postgres fill them in.
+      final json = feedback.toJson()
+        ..remove('id')
+        ..remove('created_at');
       await client
           .from('trip_feedback')
           .upsert(

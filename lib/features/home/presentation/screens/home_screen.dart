@@ -338,7 +338,9 @@ class _HomeContent extends StatelessWidget {
         ),
 
         // --- Section: Son Rotalar ---
-        if (data.recentRoutes.isNotEmpty) ...[
+        // Always shown for returning users (non-new), with an empty state
+        // when no completed routes exist yet.
+        if (!data.isNewUser) ...[
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(
@@ -358,28 +360,32 @@ class _HomeContent extends StatelessWidget {
               padding: const EdgeInsets.symmetric(
                 horizontal: GeezSpacing.lg,
               ),
-              child: GeezCard(
-                padding: EdgeInsets.zero,
-                child: Column(
-                  children: [
-                    for (int i = 0; i < data.recentRoutes.length; i++) ...[
-                      _RecentRouteTile(
-                        route: data.recentRoutes[i],
-                        isDark: isDark,
+              child: data.recentRoutes.isEmpty
+                  ? _NoRecentRoutesCard(isDark: isDark)
+                  : GeezCard(
+                      padding: EdgeInsets.zero,
+                      child: Column(
+                        children: [
+                          for (int i = 0;
+                              i < data.recentRoutes.length;
+                              i++) ...[
+                            _RecentRouteTile(
+                              route: data.recentRoutes[i],
+                              isDark: isDark,
+                            ),
+                            if (i < data.recentRoutes.length - 1)
+                              Divider(
+                                height: 1,
+                                indent: GeezSpacing.md,
+                                endIndent: GeezSpacing.md,
+                                color: isDark
+                                    ? Colors.white.withValues(alpha: 0.06)
+                                    : Colors.grey.shade100,
+                              ),
+                          ],
+                        ],
                       ),
-                      if (i < data.recentRoutes.length - 1)
-                        Divider(
-                          height: 1,
-                          indent: GeezSpacing.md,
-                          endIndent: GeezSpacing.md,
-                          color: isDark
-                              ? Colors.white.withValues(alpha: 0.06)
-                              : Colors.grey.shade100,
-                        ),
-                    ],
-                  ],
-                ),
-              ),
+                    ),
             ),
           ),
         ],
@@ -594,7 +600,7 @@ class _SectionHeader extends StatelessWidget {
             ),
           ],
         ),
-        ?trailing,
+        if (trailing != null) trailing!,
       ],
     );
   }
@@ -677,7 +683,74 @@ class _NoActiveRouteCard extends StatelessWidget {
           const SizedBox(width: GeezSpacing.sm + 4),
           Expanded(
             child: Text(
-              'Aktif bir rotanız yok. Yeni bir tane başlatmak ister misiniz?',
+              'Aktif bir rotanız yok.',
+              style: GeezTypography.bodySmall.copyWith(color: mutedColor),
+            ),
+          ),
+          const SizedBox(width: GeezSpacing.sm),
+          // Quick action: start a new route
+          Material(
+            color: GeezColors.primary,
+            borderRadius: BorderRadius.circular(GeezRadius.button),
+            child: InkWell(
+              onTap: () => context.go(RoutePaths.newRoute),
+              borderRadius: BorderRadius.circular(GeezRadius.button),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: GeezSpacing.md,
+                  vertical: GeezSpacing.sm,
+                ),
+                child: Text(
+                  'Yeni Rota',
+                  style: GeezTypography.caption.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// No recent routes empty state
+// ---------------------------------------------------------------------------
+
+class _NoRecentRoutesCard extends StatelessWidget {
+  const _NoRecentRoutesCard({required this.isDark});
+
+  final bool isDark;
+
+  @override
+  Widget build(BuildContext context) {
+    final mutedColor =
+        isDark ? GeezColors.textSecondaryDark : GeezColors.textSecondary;
+
+    return GeezCard(
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(GeezSpacing.sm),
+            decoration: BoxDecoration(
+              color: isDark
+                  ? Colors.white.withValues(alpha: 0.06)
+                  : Colors.grey.shade100,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: const Icon(
+              Icons.history_rounded,
+              size: 24,
+              color: GeezColors.primary,
+            ),
+          ),
+          const SizedBox(width: GeezSpacing.sm + 4),
+          Expanded(
+            child: Text(
+              'Henüz tamamlanmış rotanız yok.',
               style: GeezTypography.bodySmall.copyWith(color: mutedColor),
             ),
           ),
@@ -705,7 +778,10 @@ class _RecentRouteTile extends StatelessWidget {
     final textColor =
         isDark ? GeezColors.textPrimaryDark : GeezColors.textPrimary;
 
-    return Padding(
+    return InkWell(
+      onTap: () => context.go(RoutePaths.routeDetailPath(route.id)),
+      borderRadius: BorderRadius.circular(GeezRadius.card),
+      child: Padding(
       padding: const EdgeInsets.symmetric(
         horizontal: GeezSpacing.md,
         vertical: GeezSpacing.sm + 4,
@@ -759,26 +835,39 @@ class _RecentRouteTile extends StatelessWidget {
             ),
           ),
 
-          // Completed badge
-          Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: GeezSpacing.sm,
-              vertical: GeezSpacing.xs,
-            ),
-            decoration: BoxDecoration(
-              color: GeezColors.accent.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(GeezRadius.chip),
-            ),
-            child: Text(
-              'Tamamlandı',
-              style: GeezTypography.caption.copyWith(
-                color: GeezColors.accent,
-                fontWeight: FontWeight.w600,
+          // Completed badge + chevron
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: GeezSpacing.sm,
+                  vertical: GeezSpacing.xs,
+                ),
+                decoration: BoxDecoration(
+                  color: GeezColors.accent.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(GeezRadius.chip),
+                ),
+                child: Text(
+                  'Tamamlandı',
+                  style: GeezTypography.caption.copyWith(
+                    color: GeezColors.accent,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
               ),
-            ),
+              const SizedBox(width: GeezSpacing.xs),
+              Icon(
+                Icons.chevron_right_rounded,
+                size: 18,
+                color: isDark
+                    ? GeezColors.textSecondaryDark
+                    : GeezColors.textSecondary,
+              ),
+            ],
           ),
         ],
       ),
-    );
+    ));
   }
 }

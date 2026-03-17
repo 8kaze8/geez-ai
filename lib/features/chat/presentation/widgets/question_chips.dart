@@ -141,10 +141,10 @@ class _QuestionChipsState extends State<QuestionChips>
                             ? GeezColors.primary
                             : _selected != null
                                 ? (isDark
-                                    ? const Color(0xFF2A2A2E)
-                                    : const Color(0xFFF5F5F5))
+                                    ? GeezColors.surfaceVariantDark
+                                    : GeezColors.surfaceVariant)
                                 : (isDark
-                                    ? const Color(0xFF2A2A2E)
+                                    ? GeezColors.surfaceVariantDark
                                     : Colors.white),
                         borderRadius:
                             BorderRadius.circular(GeezRadius.chip),
@@ -153,8 +153,8 @@ class _QuestionChipsState extends State<QuestionChips>
                               ? GeezColors.primary
                               : _selected != null
                                   ? (isDark
-                                      ? const Color(0xFF3A3A3E)
-                                      : const Color(0xFFE0E0E0))
+                                      ? GeezColors.borderDark
+                                      : GeezColors.borderMutedLight)
                                   : GeezColors.primary
                                       .withValues(alpha: 0.4),
                           width: 1.5,
@@ -195,11 +195,11 @@ class _QuestionChipsState extends State<QuestionChips>
   Widget _buildCustomInput(bool isDark) {
     return Container(
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF2A2A2E) : Colors.white,
+        color: isDark ? GeezColors.surfaceVariantDark : Colors.white,
         borderRadius: BorderRadius.circular(GeezRadius.chip),
         border: Border.all(
           color:
-              isDark ? const Color(0xFF3A3A3E) : const Color(0xFFE0E0E0),
+              isDark ? GeezColors.borderDark : GeezColors.borderMutedLight,
           width: 1.5,
         ),
       ),

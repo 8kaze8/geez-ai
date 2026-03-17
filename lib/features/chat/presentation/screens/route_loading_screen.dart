@@ -336,8 +336,8 @@ class _StepRow extends StatelessWidget {
                   Icons.radio_button_unchecked_rounded,
                   key: const ValueKey('pending'),
                   color: isDark
-                      ? const Color(0xFF555555)
-                      : const Color(0xFFBDBDBD),
+                      ? GeezColors.pendingDark
+                      : GeezColors.pendingLight,
                   size: 22,
                 ),
             },

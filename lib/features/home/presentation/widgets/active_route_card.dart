@@ -75,7 +75,7 @@ class ActiveRouteCard extends StatelessWidget {
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        '$dateLabel  |  ${route.durationDays} gun',
+                        '$dateLabel  |  ${route.durationDays} gün',
                         style: GeezTypography.caption.copyWith(
                           color: mutedColor,
                         ),

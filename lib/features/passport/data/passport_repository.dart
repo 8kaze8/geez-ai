@@ -45,11 +45,24 @@ class PassportRepository extends BaseRepository {
   /// The DB has `UNIQUE(user_id, city, country)` — if a stamp already
   /// exists for this city the insert is silently ignored via
   /// `ON CONFLICT DO NOTHING` at the DB level (upsert-safe).
+  ///
+  /// Server-generated columns (`id`, `created_at`) are intentionally
+  /// excluded from the payload so the DB supplies them on insert and does
+  /// not overwrite them on a conflict update.
   Future<void> addStamp(PassportStampModel stamp) async {
     try {
+      final payload = <String, dynamic>{
+        'user_id': stamp.userId,
+        'city': stamp.city,
+        'country': stamp.country,
+        'stamp_date': stamp.stampDate,
+        if (stamp.routeId != null) 'route_id': stamp.routeId,
+        if (stamp.countryCode != null) 'country_code': stamp.countryCode,
+        if (stamp.stampImageUrl != null) 'stamp_image_url': stamp.stampImageUrl,
+      };
       await client
           .from('passport_stamps')
-          .upsert(stamp.toJson(), onConflict: 'user_id,city,country');
+          .upsert(payload, onConflict: 'user_id,city,country');
     } catch (e) {
       throw RepositoryException(
         table: 'passport_stamps',

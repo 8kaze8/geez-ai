@@ -15,6 +15,7 @@ class RouteGenerationState {
     this.routeId,
     this.errorMessage,
     this.errorType,
+    this.lastParams,
   });
 
   final RouteGenerationStatus status;
@@ -28,10 +29,21 @@ class RouteGenerationState {
   final String? errorMessage;
   final ChatErrorType? errorType;
 
+  /// The params that triggered the last [generate] call — kept so [retry]
+  /// can replay without the user redoing the Q&A flow.
+  final Map<String, dynamic>? lastParams;
+
   bool get isIdle => status == RouteGenerationStatus.idle;
   bool get isLoading => status == RouteGenerationStatus.loading;
   bool get isSuccess => status == RouteGenerationStatus.success;
   bool get isError => status == RouteGenerationStatus.error;
+
+  /// True when a retry is possible (error state + params available + not
+  /// a rate-limit error where retrying would immediately fail again).
+  bool get canRetry =>
+      isError &&
+      lastParams != null &&
+      errorType != ChatErrorType.rateLimitExceeded;
 
   RouteGenerationState copyWith({
     RouteGenerationStatus? status,
@@ -39,6 +51,7 @@ class RouteGenerationState {
     String? routeId,
     String? errorMessage,
     ChatErrorType? errorType,
+    Map<String, dynamic>? lastParams,
   }) =>
       RouteGenerationState(
         status: status ?? this.status,
@@ -46,6 +59,7 @@ class RouteGenerationState {
         routeId: routeId ?? this.routeId,
         errorMessage: errorMessage ?? this.errorMessage,
         errorType: errorType ?? this.errorType,
+        lastParams: lastParams ?? this.lastParams,
       );
 }
 
@@ -81,7 +95,7 @@ class RouteGenerationNotifier extends StateNotifier<RouteGenerationState> {
   Future<String?> generate(Map<String, dynamic> extractedParams) async {
     if (state.isLoading) return null;
 
-    _startProgressCycle();
+    _startProgressCycle(lastParams: extractedParams);
 
     try {
       final response = await _repo.generateRoute(params: extractedParams);
@@ -90,6 +104,7 @@ class RouteGenerationNotifier extends StateNotifier<RouteGenerationState> {
       state = RouteGenerationState(
         status: RouteGenerationStatus.success,
         routeId: response.routeId,
+        lastParams: extractedParams,
       );
       return response.routeId;
     } on ChatException catch (e) {
@@ -98,6 +113,7 @@ class RouteGenerationNotifier extends StateNotifier<RouteGenerationState> {
         status: RouteGenerationStatus.error,
         errorMessage: _turkishError(e),
         errorType: e.type,
+        lastParams: extractedParams,
       );
       return null;
     } catch (e) {
@@ -105,9 +121,18 @@ class RouteGenerationNotifier extends StateNotifier<RouteGenerationState> {
       state = RouteGenerationState(
         status: RouteGenerationStatus.error,
         errorMessage: 'Beklenmedik bir hata oluştu. Lütfen tekrar deneyin.',
+        lastParams: extractedParams,
       );
       return null;
     }
+  }
+
+  /// Replays the last [generate] call without requiring the user to redo the
+  /// Q&A flow. No-op if there are no saved params or if already loading.
+  Future<String?> retry() async {
+    final params = state.lastParams;
+    if (params == null || state.isLoading) return null;
+    return generate(params);
   }
 
   void reset() {
@@ -119,11 +144,12 @@ class RouteGenerationNotifier extends StateNotifier<RouteGenerationState> {
   // Private helpers
   // ---------------------------------------------------------------------------
 
-  void _startProgressCycle() {
+  void _startProgressCycle({required Map<String, dynamic> lastParams}) {
     _progressIndex = 0;
     state = RouteGenerationState(
       status: RouteGenerationStatus.loading,
       progressMessage: _progressMessages.first,
+      lastParams: lastParams,
     );
 
     _progressTimer = Timer.periodic(const Duration(seconds: 2), (_) {
@@ -133,6 +159,7 @@ class RouteGenerationNotifier extends StateNotifier<RouteGenerationState> {
         state = RouteGenerationState(
           status: RouteGenerationStatus.loading,
           progressMessage: _progressMessages[_progressIndex],
+          lastParams: lastParams,
         );
       }
     });
@@ -153,6 +180,8 @@ class RouteGenerationNotifier extends StateNotifier<RouteGenerationState> {
         'Sunucu hatası oluştu. Lütfen biraz bekleyip tekrar deneyin.',
       ChatErrorType.networkError =>
         'İnternet bağlantısı kurulamadı. Bağlantınızı kontrol edin.',
+      ChatErrorType.unauthorized =>
+        'Oturumunuz sona erdi. Lütfen tekrar giriş yapın.',
     };
   }
 

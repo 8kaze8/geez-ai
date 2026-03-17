@@ -80,6 +80,9 @@ enum ChatErrorType {
 
   /// No network / connection refused.
   networkError,
+
+  /// HTTP 401 — invalid or expired JWT token.
+  unauthorized,
 }
 
 class ChatException implements Exception {
@@ -101,6 +104,22 @@ class ChatRepository {
 
   final SupabaseClient _client;
 
+  /// Gets the current access token, refreshing if needed.
+  Future<Map<String, String>> _getAuthHeaders() async {
+    var session = _client.auth.currentSession;
+
+    if (session != null && session.isExpired) {
+      try {
+        final res = await _client.auth.refreshSession();
+        session = res.session;
+      } catch (_) {}
+    }
+
+    if (session == null) return {};
+
+    return {'Authorization': 'Bearer ${session.accessToken}'};
+  }
+
   /// Sends the current [messages] and [currentStep] to the `/chat` Edge
   /// Function and returns a typed [ChatResponse].
   Future<ChatResponse> sendMessage({
@@ -109,8 +128,10 @@ class ChatRepository {
     String language = 'tr',
   }) async {
     try {
+      final authHeaders = await _getAuthHeaders();
       final response = await _client.functions.invoke(
         'chat',
+        headers: authHeaders.isNotEmpty ? authHeaders : null,
         body: {
           'messages': messages.map((m) => m.toJson()).toList(),
           'currentStep': currentStep,
@@ -120,10 +141,17 @@ class ChatRepository {
 
       _assertSuccess(response);
 
-      final data = response.data as Map<String, dynamic>;
+      final data = _ensureMap(response.data, 'chat');
       return ChatResponse.fromJson(data);
     } on ChatException {
       rethrow;
+    } on FunctionException catch (e) {
+      throw ChatException(
+        type: e.status == 401
+            ? ChatErrorType.unauthorized
+            : ChatErrorType.networkError,
+        message: e.toString(),
+      );
     } catch (e) {
       throw ChatException(
         type: ChatErrorType.networkError,
@@ -139,19 +167,28 @@ class ChatRepository {
     String language = 'tr',
   }) async {
     try {
+      final authHeaders = await _getAuthHeaders();
       final body = Map<String, dynamic>.from(params)..['language'] = language;
 
       final response = await _client.functions.invoke(
         'generate-route',
+        headers: authHeaders.isNotEmpty ? authHeaders : null,
         body: body,
       );
 
       _assertSuccess(response);
 
-      final data = response.data as Map<String, dynamic>;
+      final data = _ensureMap(response.data, 'generate-route');
       return GenerateRouteResponse.fromJson(data);
     } on ChatException {
       rethrow;
+    } on FunctionException catch (e) {
+      throw ChatException(
+        type: e.status == 401
+            ? ChatErrorType.unauthorized
+            : ChatErrorType.serverError,
+        message: e.toString(),
+      );
     } catch (e) {
       throw ChatException(
         type: ChatErrorType.networkError,
@@ -164,10 +201,30 @@ class ChatRepository {
   // Helpers
   // ---------------------------------------------------------------------------
 
+  /// Safely extracts a [Map] from [response.data]. When the Edge Function
+  /// returns a non-JSON body (e.g. platform timeout, cold-start, text/plain),
+  /// [data] may be a [String] instead of a decoded Map. Throwing a typed
+  /// [ChatException] prevents a raw [TypeError] from leaking into the
+  /// generic catch block.
+  Map<String, dynamic> _ensureMap(dynamic data, String functionName) {
+    if (data is Map<String, dynamic>) return data;
+    throw ChatException(
+      type: ChatErrorType.serverError,
+      message: '$functionName returned unexpected data: '
+          '${data.runtimeType}',
+    );
+  }
+
   void _assertSuccess(FunctionResponse response) {
     final status = response.status;
     if (status == 200 || status == 201) return;
 
+    if (status == 401) {
+      throw const ChatException(
+        type: ChatErrorType.unauthorized,
+        message: 'Unauthorized',
+      );
+    }
     if (status == 429) {
       throw const ChatException(
         type: ChatErrorType.rateLimitExceeded,
@@ -178,6 +235,12 @@ class ChatRepository {
       throw const ChatException(
         type: ChatErrorType.validationError,
         message: 'Validation error',
+      );
+    }
+    if (status == 502) {
+      throw const ChatException(
+        type: ChatErrorType.serverError,
+        message: 'AI model error',
       );
     }
     throw ChatException(

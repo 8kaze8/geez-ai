@@ -119,9 +119,9 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                     colors: [
-                      Color(0xFF1A73E8),
-                      Color(0xFF4DA3FF),
-                      Color(0xFF00C853),
+                      GeezColors.primary,
+                      GeezColors.primaryLight,
+                      GeezColors.accent,
                     ],
                   ),
                   boxShadow: [

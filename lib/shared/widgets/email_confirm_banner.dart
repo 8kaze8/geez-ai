@@ -85,7 +85,7 @@ class _BannerContent extends ConsumerWidget {
         isDark ? GeezColors.textSecondaryDark : GeezColors.textSecondary;
     final resendColor = isDark
         ? GeezColors.warning
-        : const Color(0xFFE65100); // amber-900 for legibility on light
+        : GeezColors.warningDeep; // deeper amber for legibility on light
 
     return Container(
       margin: const EdgeInsets.symmetric(

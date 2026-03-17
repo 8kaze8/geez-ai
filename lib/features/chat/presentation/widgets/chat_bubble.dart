@@ -55,8 +55,8 @@ class ChatBubble extends StatelessWidget {
               decoration: BoxDecoration(
                 color: isAI
                     ? (isDark
-                        ? const Color(0xFF2A2A2E)
-                        : const Color(0xFFF0F4FA))
+                        ? GeezColors.chatAiBubbleDark
+                        : GeezColors.chatAiBubbleLight)
                     : GeezColors.primary,
                 borderRadius: BorderRadius.only(
                   topLeft: const Radius.circular(18),

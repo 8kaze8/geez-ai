@@ -396,12 +396,12 @@ class _MapPlaceholder extends StatelessWidget {
           end: Alignment.bottomCenter,
           colors: isDark
               ? [
-                  const Color(0xFF1A2332),
-                  const Color(0xFF2A3342),
+                  GeezColors.mapSkyDark,
+                  GeezColors.mapGroundDark,
                 ]
               : [
-                  const Color(0xFFD4E4F7),
-                  const Color(0xFFE8EAF0),
+                  GeezColors.mapSkyLight,
+                  GeezColors.mapGroundLight,
                 ],
         ),
       ),
@@ -636,7 +636,7 @@ class _InfoBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF252528) : const Color(0xFFF5F5F5),
+        color: isDark ? GeezColors.surfaceElevatedDark : GeezColors.surfaceVariant,
         borderRadius: BorderRadius.circular(20),
       ),
       child: Row(
@@ -714,8 +714,8 @@ class _DayTabsDelegate extends SliverPersistentHeaderDelegate {
                       color: isSelected
                           ? GeezColors.primary
                           : (isDark
-                              ? const Color(0xFF3A3A3E)
-                              : const Color(0xFFE0E0E0)),
+                              ? GeezColors.borderDark
+                              : GeezColors.borderMutedLight),
                       width: 1.5,
                     ),
                   ),

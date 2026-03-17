@@ -132,6 +132,41 @@ class RouteRepository extends BaseRepository {
     }
   }
 
+  /// Activates [routeId] and ensures only one active route exists at a time.
+  ///
+  /// Any route currently in `'active'` state for the same user is moved back
+  /// to `'draft'` before [routeId] is transitioned to `'active'`.
+  ///
+  /// Pass [userId] so we can scope the "deactivate previous" query to the
+  /// correct user without an extra fetch.
+  Future<void> activateRoute(String routeId, String userId) async {
+    try {
+      // Move any existing active route back to draft.
+      await client
+          .from('routes')
+          .update({'status': 'draft'})
+          .eq('user_id', userId)
+          .eq('status', 'active')
+          .neq('id', routeId);
+
+      // Activate the requested route.
+      await updateRouteStatus(routeId, 'active');
+    } catch (e) {
+      throw RepositoryException(
+        table: 'routes',
+        operation: 'activateRoute($routeId)',
+        cause: e,
+      );
+    }
+  }
+
+  /// Transitions [routeId] to `'completed'`.
+  ///
+  /// The DB trigger `trg_routes_set_completed_at` auto-sets `completed_at`.
+  Future<void> completeRoute(String routeId) async {
+    await updateRouteStatus(routeId, 'completed');
+  }
+
   /// Soft-deletes [routeId] by setting `status = 'deleted'`.
   ///
   /// The route row is preserved for audit history and Memory Agent lookups.

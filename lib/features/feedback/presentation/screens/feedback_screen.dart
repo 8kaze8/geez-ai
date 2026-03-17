@@ -569,7 +569,7 @@ class _TintedChip extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final mutedBorderColor =
-        isDark ? const Color(0xFF424242) : const Color(0xFFE0E0E0);
+        isDark ? GeezColors.borderMutedDark : GeezColors.borderMutedLight;
     final textColor =
         isDark ? GeezColors.textPrimaryDark : GeezColors.textPrimary;
 
@@ -670,7 +670,7 @@ class _ToggleOption extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final mutedBorder =
-        isDark ? const Color(0xFF424242) : const Color(0xFFE0E0E0);
+        isDark ? GeezColors.borderMutedDark : GeezColors.borderMutedLight;
     final textColor =
         isDark ? GeezColors.textPrimaryDark : GeezColors.textPrimary;
 
@@ -736,8 +736,8 @@ class _FreeTextField extends StatelessWidget {
         ? Colors.white.withValues(alpha: 0.05)
         : Colors.black.withValues(alpha: 0.04);
     final borderColor = isDark
-        ? const Color(0xFF424242)
-        : const Color(0xFFE0E0E0);
+        ? GeezColors.borderMutedDark
+        : GeezColors.borderMutedLight;
 
     return TextField(
       controller: controller,
