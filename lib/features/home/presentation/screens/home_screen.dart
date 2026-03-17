@@ -13,6 +13,7 @@ import 'package:geez_ai/features/route/domain/route_model.dart';
 import 'package:geez_ai/shared/widgets/email_confirm_banner.dart';
 import 'package:geez_ai/shared/widgets/geez_button.dart';
 import 'package:geez_ai/shared/widgets/geez_card.dart';
+import 'package:geez_ai/shared/widgets/shimmer_box.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -72,16 +73,16 @@ class _HomeLoadingState extends StatelessWidget {
             ),
             child: Row(
               children: [
-                _ShimmerBox(width: 44, height: 44, radius: 22, color: shimmerBase),
+                ShimmerBox(width: 44, height: 44, radius: 22, color: shimmerBase),
                 const SizedBox(width: GeezSpacing.sm + 4),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _ShimmerBox(
+                      ShimmerBox(
                           width: 140, height: 16, radius: 8, color: shimmerBase),
                       const SizedBox(height: 6),
-                      _ShimmerBox(
+                      ShimmerBox(
                           width: 200, height: 12, radius: 6, color: shimmerBase),
                     ],
                   ),
@@ -93,7 +94,7 @@ class _HomeLoadingState extends StatelessWidget {
         SliverToBoxAdapter(
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: GeezSpacing.lg),
-            child: _ShimmerBox(
+            child: ShimmerBox(
                 width: double.infinity, height: 88, radius: 12, color: shimmerBase),
           ),
         ),
@@ -105,14 +106,14 @@ class _HomeLoadingState extends StatelessWidget {
               GeezSpacing.lg,
               GeezSpacing.sm,
             ),
-            child: _ShimmerBox(
+            child: ShimmerBox(
                 width: 120, height: 20, radius: 8, color: shimmerBase),
           ),
         ),
         SliverToBoxAdapter(
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: GeezSpacing.lg),
-            child: _ShimmerBox(
+            child: ShimmerBox(
                 width: double.infinity, height: 130, radius: 16, color: shimmerBase),
           ),
         ),
@@ -120,32 +121,6 @@ class _HomeLoadingState extends StatelessWidget {
           child: SizedBox(height: GeezSpacing.xxl + GeezSpacing.xl),
         ),
       ],
-    );
-  }
-}
-
-class _ShimmerBox extends StatelessWidget {
-  const _ShimmerBox({
-    required this.width,
-    required this.height,
-    required this.radius,
-    required this.color,
-  });
-
-  final double width;
-  final double height;
-  final double radius;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: width,
-      height: height,
-      decoration: BoxDecoration(
-        color: color,
-        borderRadius: BorderRadius.circular(radius),
-      ),
     );
   }
 }

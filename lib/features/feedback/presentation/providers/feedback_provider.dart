@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geez_ai/features/auth/presentation/providers/auth_provider.dart';
-import 'package:geez_ai/features/chat/data/feedback_repository.dart';
-import 'package:geez_ai/features/chat/domain/trip_feedback_model.dart';
+import 'package:geez_ai/features/feedback/data/feedback_repository.dart';
+import 'package:geez_ai/features/feedback/domain/trip_feedback_model.dart';
 
 // ---------------------------------------------------------------------------
 // FeedbackFormState

@@ -11,6 +11,7 @@ import 'package:geez_ai/features/passport/presentation/providers/passport_provid
 import 'package:geez_ai/features/passport/presentation/widgets/collection_card.dart';
 import 'package:geez_ai/features/passport/presentation/widgets/stamp_card.dart';
 import 'package:geez_ai/features/passport/presentation/widgets/stats_row.dart';
+import 'package:geez_ai/shared/widgets/shimmer_box.dart';
 
 // ---------------------------------------------------------------------------
 // Static collection definitions (data-backed in a future sprint)
@@ -451,12 +452,12 @@ class _PassportShimmer extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Header shimmer
-          Center(child: _ShimmerBox(width: 200, height: 32, color: baseColor)),
+          Center(child: ShimmerBox(width: 200, height: 32, color: baseColor)),
           const SizedBox(height: GeezSpacing.lg),
           // Cover shimmer
-          _ShimmerBox(width: double.infinity, height: 220, color: baseColor),
+          ShimmerBox(width: double.infinity, height: 220, color: baseColor),
           const SizedBox(height: GeezSpacing.lg),
-          _ShimmerBox(width: 120, height: 20, color: baseColor),
+          ShimmerBox(width: 120, height: 20, color: baseColor),
           const SizedBox(height: GeezSpacing.md),
           // Stamp grid shimmer
           GridView.builder(
@@ -470,35 +471,11 @@ class _PassportShimmer extends StatelessWidget {
             ),
             itemCount: 6,
             itemBuilder: (_, _) =>
-                _ShimmerBox(width: double.infinity, height: double.infinity, color: baseColor),
+                ShimmerBox(width: double.infinity, height: double.infinity, color: baseColor),
           ),
           const SizedBox(height: GeezSpacing.lg),
-          _ShimmerBox(width: double.infinity, height: 100, color: baseColor),
+          ShimmerBox(width: double.infinity, height: 100, color: baseColor),
         ],
-      ),
-    );
-  }
-}
-
-class _ShimmerBox extends StatelessWidget {
-  const _ShimmerBox({
-    required this.width,
-    required this.height,
-    required this.color,
-  });
-
-  final double width;
-  final double height;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: width,
-      height: height,
-      decoration: BoxDecoration(
-        color: color,
-        borderRadius: BorderRadius.circular(GeezRadius.card),
       ),
     );
   }
